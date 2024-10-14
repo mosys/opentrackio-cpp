@@ -14,7 +14,7 @@
 #pragma once
 #include <format>
 #include <regex>
-#include "../external/json/json.hpp"
+#include <nlohmann/json.hpp>
 #include "OpenTrackIOTypes.h"
 
 

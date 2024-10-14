@@ -15,7 +15,7 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include "../external/json/json.hpp"
+#include <nlohmann/json.hpp>
 
 namespace opentrackio::opentrackiotypes
 {
