@@ -14,7 +14,7 @@
 #pragma once
 #include <optional>
 #include <span>
-#include "../external/json/json.hpp"
+#include <nlohmann/json.hpp>
 #include "OpenTrackIOProperties.h"
 
 namespace opentrackio

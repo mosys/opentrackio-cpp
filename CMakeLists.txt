@@ -12,9 +12,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(opentrackio-cpp VERSION 1.0.0 LANGUAGES CXX)
 
-# Setup external folder for deps
-set(EXTERNAL_DIR "${CMAKE_SOURCE_DIR}/external")
-
 set (
         source_list
         
@@ -23,9 +20,13 @@ set (
         src/OpenTrackIOSample.cpp
 )
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+find_package(nlohmann_json REQUIRED)
+
 add_library(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PRIVATE ${source_list})
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
 # Handle debug vs release builds and their separate libs
 
@@ -56,49 +57,47 @@ target_include_directories(
             
 )
 
-add_library(nlohmann_json INTERFACE)
-target_include_directories(
-        nlohmann_json INTERFACE 
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/json>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/external/json>
-)
-target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json)
+target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
 
-# If we are building to the local install for packaging, build linux and windows to the same path.  
-# Otherwise use the expected system defaults
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(cmake_lib_install_dir ${CMAKE_INSTALL_LIBDIR})
-else()
-    set(cmake_lib_install_dir ${CMAKE_INSTALL_LIBDIR}/${CMAKE_SYSTEM_NAME})
-endif()
-
-install(TARGETS ${PROJECT_NAME} nlohmann_json
+install(TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}Targets
-        LIBRARY DESTINATION ${cmake_lib_install_dir}
-        ARCHIVE DESTINATION ${cmake_lib_install_dir}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
+# Write targets and config out to different folders depending on OS relating to the differing search procedure cmake does.
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    set(cmake_targets_install_dir ${CMAKE_INSTALL_PREFIX}/cmake)
+else()
+    set(cmake_targets_install_dir ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+endif()
+
 install(EXPORT ${PROJECT_NAME}Targets
         NAMESPACE ${PROJECT_NAME}::
-        DESTINATION ${cmake_lib_install_dir}/cmake/${PROJECT_NAME}
+        DESTINATION ${cmake_targets_install_dir}
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/${PROJECT_NAME}/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 
-install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/external/json/
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/external/json/)
+# If json dep isn't covered by conan then copy ours to the install
+get_target_property(IS_CONAN_PACKAGE nlohmann_json::nlohmann_json INTERFACE_COMPILE_OPTIONS)
+if (NOT IS_CONAN_PACKAGE)
+    message("Build isn't Conan. Copying JSON deps.")
+    install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/external/nlohmann/
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/external/nlohmann/)
+endif()
 
 include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/Config.cmake.in
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-        INSTALL_DESTINATION ${cmake_lib_install_dir}/cmake/${PROJECT_NAME}
+        INSTALL_DESTINATION ${cmake_targets_install_dir}
 )
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-        DESTINATION ${cmake_lib_install_dir}/cmake/${PROJECT_NAME}
+        DESTINATION ${cmake_targets_install_dir}
 )

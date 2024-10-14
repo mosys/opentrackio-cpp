@@ -15,7 +15,7 @@
 #include <vector>
 #include <string>
 #include <optional>
-#include "../external/json/json.hpp"
+#include <nlohmann/json.hpp>
 #include "OpenTrackIOTypes.h"
 
 namespace opentrackio::opentrackioproperties
