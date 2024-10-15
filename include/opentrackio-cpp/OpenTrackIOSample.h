@@ -30,6 +30,7 @@ namespace opentrackio
         std::optional<opentrackioproperties::Protocol> protocol = std::nullopt;
         std::optional<opentrackioproperties::RelatedSampleIds> relatedSampleIds = std::nullopt;
         std::optional<opentrackioproperties::SampleId> sampleId = std::nullopt;
+        std::optional<opentrackioproperties::StreamId> streamId = std::nullopt;
         std::optional<opentrackioproperties::Timing> timing = std::nullopt;
         std::optional<opentrackioproperties::Tracker> tracker = std::nullopt;
         std::optional<opentrackioproperties::Transforms> transforms = std::nullopt;
@@ -46,11 +47,12 @@ namespace opentrackio
         void generateJson();
         void parseCameraToJson(nlohmann::json& baseJson);
         void parseDurationToJson(nlohmann::json& baseJson);
+        void parseGlobalStageToJson(nlohmann::json& baseJson);
         void parseLensToJson(nlohmann::json& baseJson);
         void parseProtocolToJson(nlohmann::json& baseJson);
         void parseRelatedSampleIdsToJson(nlohmann::json& baseJson);
         void parseSampleIdToJson(nlohmann::json& baseJson);
-        void parseGlobalStageToJson(nlohmann::json& baseJson);
+        void parseStreamIdToJson(nlohmann::json& baseJson);
         void parseTimingToJson(nlohmann::json& baseJson);
         void parseTrackerToJson(nlohmann::json& baseJson);
         void parseTransformsToJson(nlohmann::json& baseJson);

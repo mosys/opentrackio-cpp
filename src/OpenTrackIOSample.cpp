@@ -67,6 +67,7 @@ namespace opentrackio
         protocol = opentrackioproperties::Protocol::parse(json, m_errorMessages);
         relatedSampleIds = opentrackioproperties::RelatedSampleIds::parse(json, m_errorMessages);
         sampleId = opentrackioproperties::SampleId::parse(json, m_errorMessages);
+        streamId = opentrackioproperties::StreamId::parse(json, m_errorMessages);
         timing = opentrackioproperties::Timing::parse(json, m_errorMessages);
         tracker = opentrackioproperties::Tracker::parse(json, m_errorMessages);
         transforms = opentrackioproperties::Transforms::parse(json, m_errorMessages);
@@ -103,11 +104,12 @@ namespace opentrackio
 
         parseCameraToJson(j);
         parseDurationToJson(j);
+        parseGlobalStageToJson(j);
         parseLensToJson(j);
         parseProtocolToJson(j);
         parseRelatedSampleIdsToJson(j);
         parseSampleIdToJson(j);
-        parseGlobalStageToJson(j);
+        parseStreamIdToJson(j);
         parseTimingToJson(j);
         parseTrackerToJson(j);
         parseTransformsToJson(j);
@@ -131,7 +133,7 @@ namespace opentrackio
         assignJson(cameraJson, "make", camera->make);
         assignJson(cameraJson, "model", camera->model);
         assignJson(cameraJson, "serialNumber", camera->serialNumber);
-        assignJson(cameraJson, "captureRate", camera->captureRate);
+        assignJson(cameraJson, "captureFrameRate", camera->captureFrameRate);
         assignJson(cameraJson, "fdlLink", camera->fdlLink);
         assignJson(cameraJson, "isoSpeed", camera->isoSpeed);
         assignJson(cameraJson, "shutterAngle", camera->shutterAngle);
@@ -146,6 +148,21 @@ namespace opentrackio
 
         baseJson["static"]["duration"]["num"] = duration->rational.numerator;
         baseJson["static"]["duration"]["denom"] = duration->rational.denominator;
+    }
+
+    void OpenTrackIOSample::parseGlobalStageToJson(nlohmann::json &baseJson)
+    {
+        if (!globalStage.has_value())
+        {
+            return;
+        }
+
+        baseJson["globalStage"]["E"] = globalStage->e;
+        baseJson["globalStage"]["N"] = globalStage->n;
+        baseJson["globalStage"]["U"] = globalStage->u;
+        baseJson["globalStage"]["lat0"] = globalStage->lat0;
+        baseJson["globalStage"]["lon0"] = globalStage->lon0;
+        baseJson["globalStage"]["h0"] = globalStage->h0;
     }    
 
     void OpenTrackIOSample::parseLensToJson(nlohmann::json& baseJson)
@@ -256,22 +273,17 @@ namespace opentrackio
         }
 
         baseJson["sampleId"] = sampleId->id;
-    }    
-    
-    void OpenTrackIOSample::parseGlobalStageToJson(nlohmann::json &baseJson)
+    }
+
+    void OpenTrackIOSample::parseStreamIdToJson(nlohmann::json &baseJson)
     {
-        if (!globalStage.has_value())
+        if (!streamId.has_value())
         {
             return;
         }
-        
-        baseJson["globalStage"]["E"] = globalStage->e;
-        baseJson["globalStage"]["N"] = globalStage->n;
-        baseJson["globalStage"]["U"] = globalStage->u;
-        baseJson["globalStage"]["lat0"] = globalStage->lat0;
-        baseJson["globalStage"]["lon0"] = globalStage->lon0;
-        baseJson["globalStage"]["h0"] = globalStage->h0;
-    }
+
+        baseJson["streamId"] = streamId->id;
+    }    
 
     void OpenTrackIOSample::parseTimingToJson(nlohmann::json& baseJson)
     {
@@ -317,7 +329,7 @@ namespace opentrackio
                 const auto& offsets = timing->synchronization->offsets.value();
                 assignJson(baseJson["timing"]["synchronization"]["offsets"], "translation", offsets.translation);
                 assignJson(baseJson["timing"]["synchronization"]["offsets"], "rotation", offsets.rotation);
-                assignJson(baseJson["timing"]["synchronization"]["offsets"], "encoders", offsets.encoders);
+                assignJson(baseJson["timing"]["synchronization"]["offsets"], "lensEncoders", offsets.lensEncoders);
             }            
             
             assignJson(baseJson["timing"]["synchronization"], "present", timing->synchronization->present);
