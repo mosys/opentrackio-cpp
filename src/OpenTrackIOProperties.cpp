@@ -19,19 +19,19 @@ namespace opentrackio::opentrackioproperties
 {
     std::optional<Camera> Camera::parse(const nlohmann::json &json, std::vector<std::string>& errors)
     {
-        if (!json.contains("camera"))
+        if (!json.contains("static") || !json["static"].contains("camera"))
         {
             return std::nullopt;
         }
 
-        if (!json["camera"].is_object())
+        if (!json["static"]["camera"].is_object())
         {
             errors.emplace_back("field: camera isn't of type: object");
             return std::nullopt;
         }
         
         Camera cam{};
-        const auto& cameraJson = json["camera"];
+        const auto& cameraJson = json["static"]["camera"];
         
         if (cameraJson.contains("activeSensorPhysicalDimensions"))
         {
@@ -44,6 +44,13 @@ namespace opentrackio::opentrackioproperties
             cam.activeSensorResolution = opentrackiotypes::Dimensions::parse(cameraJson["activeSensorResolution"], errors);
         }
 
+        OpenTrackIOHelpers::assignField(cameraJson, "anamorphicSqueeze", cam.anamorphicSqueeze, "integer", errors);
+        OpenTrackIOHelpers::assignField(cameraJson, "firmwareVersion", cam.firmwareVersion, "string", errors);
+        OpenTrackIOHelpers::assignField(cameraJson, "label", cam.label, "string", errors);
+        OpenTrackIOHelpers::assignField(cameraJson, "make", cam.make, "string", errors);
+        OpenTrackIOHelpers::assignField(cameraJson, "model", cam.model, "string", errors);
+        OpenTrackIOHelpers::assignField(cameraJson, "serialNumber", cam.serialNumber, "string", errors);
+
         if (cameraJson.contains("captureRate"))
         {
             cam.captureRate = opentrackiotypes::Rational::parse(cameraJson["captureRate"], errors);
@@ -51,12 +58,7 @@ namespace opentrackio::opentrackioproperties
         
         const std::regex pattern{R"(^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$)"};
         OpenTrackIOHelpers::assignRegexField(cameraJson, "fdlLink", cam.fdlLink, pattern, errors);
-        OpenTrackIOHelpers::assignField(cameraJson, "anamorphicSqueeze", cam.anamorphicSqueeze, "integer", errors);
-        OpenTrackIOHelpers::assignField(cameraJson, "firmwareVersion", cam.firmwareVersion, "string", errors);
-        OpenTrackIOHelpers::assignField(cameraJson, "id", cam.id, "string", errors);
-        OpenTrackIOHelpers::assignField(cameraJson, "make", cam.make, "string", errors);
-        OpenTrackIOHelpers::assignField(cameraJson, "model", cam.model, "string", errors);
-        OpenTrackIOHelpers::assignField(cameraJson, "serialNumber", cam.serialNumber, "string", errors);
+        
         OpenTrackIOHelpers::assignField(cameraJson, "isoSpeed", cam.isoSpeed, "integer", errors);
         OpenTrackIOHelpers::assignField(cameraJson, "shutterAngle", cam.shutterAngle, "integer", errors);
         
@@ -69,47 +71,20 @@ namespace opentrackio::opentrackioproperties
         return cam;
     }
 
-    std::optional<Device> Device::parse(const nlohmann::json &json, std::vector<std::string>& errors)
-    {
-        if (!json.contains("device"))
-        {
-            return std::nullopt;    
-        }
-
-        if (!json["device"].is_object())
-        {
-            errors.emplace_back("field: device isn't of type: object");
-            return std::nullopt;
-        }
-        
-        Device dev{};
-        const auto& deviceJson = json["device"];
-        OpenTrackIOHelpers::assignField(deviceJson, "firmwareVersion", dev.firmwareVersion, "string", errors);
-        OpenTrackIOHelpers::assignField(deviceJson, "make", dev.make, "string", errors);
-        OpenTrackIOHelpers::assignField(deviceJson, "model", dev.model, "string", errors);
-        OpenTrackIOHelpers::assignField(deviceJson, "notes", dev.notes, "string", errors);
-        OpenTrackIOHelpers::assignField(deviceJson, "recording", dev.recording, "boolean", errors);
-        OpenTrackIOHelpers::assignField(deviceJson, "serialNumber", dev.serialNumber, "string", errors);
-        OpenTrackIOHelpers::assignField(deviceJson, "slate", dev.slate, "string", errors);
-        OpenTrackIOHelpers::assignField(deviceJson, "status", dev.status, "string", errors);
-
-        return dev;
-    }
-
     std::optional<Duration> Duration::parse(const nlohmann::json &json, std::vector<std::string>& errors)
     {
-        if (!json.contains("duration"))
+        if (!json.contains("static") || !json["static"].contains("duration"))
         {
             return std::nullopt;    
         }
 
-        if (!json["duration"].is_object())
+        if (!json["static"]["duration"].is_object())
         {
             errors.emplace_back("field: duration isn't of type: object");
             return std::nullopt;
         }
         
-        const auto& durationJson = json["duration"];
+        const auto& durationJson = json["static"]["duration"];
         std::optional<uint32_t> numerator = std::nullopt;
         std::optional<uint32_t> denominator = std::nullopt;
         
@@ -172,132 +147,139 @@ namespace opentrackio::opentrackioproperties
 
     std::optional<Lens> Lens::parse(const nlohmann::json &json, std::vector<std::string>& errors)
     {
-        if (!json.contains("lens"))
+        if (!json.contains("lens") && (!json.contains("static") || !json["static"].contains("lens")))
         {
-            return std::nullopt;
-        }
-
-        if (!json["lens"].is_object())
-        {
-            errors.emplace_back("field: lens isn't of type: object");
             return std::nullopt;
         }
 
         Lens lens{};
-        const auto& lensJson = json["lens"];
         
-        if (lensJson.contains("custom") && lensJson["custom"].is_array())
+        // ------- Static Fields
+        if (json.contains("static") && json["static"].contains("lens"))
         {
-            if (!OpenTrackIOHelpers::iterateJsonArrayAndPopulateVector(lensJson["custom"], lens.custom))
-            {
-                errors.emplace_back("field: lens/custom value isn't of type: double");
-                lens.custom = std::nullopt;
-            }
-        }
-        
-        if (lensJson.contains("distortion"))
-        {
-            std::optional<std::vector<double>> radial = std::nullopt;
-            std::optional<std::vector<double>> tangential = std::nullopt;
-            
-            OpenTrackIOHelpers::assignField(lensJson["distortion"], "radial", radial, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson["distortion"], "tangential", tangential, "double", errors);
-            
-            if (radial.has_value())
-            {
-                lens.distortion = Distortion();
-                lens.distortion->radial = std::move(radial.value());
-                lens.distortion->tangential = std::move(tangential);
-            }
-        }
-
-        if (lensJson.contains("undistortion"))
-        {
-            std::optional<std::vector<double>> radial = std::nullopt;
-            std::optional<std::vector<double>> tangential = std::nullopt;
-
-            OpenTrackIOHelpers::assignField(lensJson["undistortion"], "radial", radial, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson["undistortion"], "tangential", tangential, "double", errors);
-
-            if (radial.has_value())
-            {
-                lens.undistortion = Undistortion();
-                lens.undistortion->radial = std::move(radial.value());
-                lens.undistortion->tangential = std::move(tangential);
-            }
+            const auto& lensJson = json["static"]["lens"];
+            OpenTrackIOHelpers::assignField(lensJson, "firmwareVersion", lens.firmwareVersion, "string", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "make", lens.make, "string", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "model", lens.model, "string", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "nominalFocalLength", lens.nominalFocalLength, "uint32", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "serialNumber", lens.serialNumber, "string", errors);
         }
         
-        if (lensJson.contains("distortionShift"))
+        // ------- Standard Fields
+        if (json.contains("lens"))
         {
-            std::optional<double> x = std::nullopt;
-            std::optional<double> y = std::nullopt;
-            
-            OpenTrackIOHelpers::assignField(lensJson["distortionShift"], "Cx", x, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson["distortionShift"], "Cy", y, "double", errors);
-            
-            if (x.has_value() && y.has_value())
+            const auto& lensJson = json["lens"];
+            if (lensJson.contains("custom") && lensJson["custom"].is_array())
             {
-                lens.distortionShift = DistortionShift{x.value(), y.value()};
+                if (!OpenTrackIOHelpers::iterateJsonArrayAndPopulateVector(lensJson["custom"], lens.custom))
+                {
+                    errors.emplace_back("field: lens/custom value isn't of type: double");
+                    lens.custom = std::nullopt;
+                }
             }
-        }
 
-        if (lensJson.contains("entrancePupilDistance"))
-        {
-            std::optional<int64_t> numerator = std::nullopt;
-            std::optional<int64_t> denominator = std::nullopt;
-
-            OpenTrackIOHelpers::assignField(lensJson["entrancePupilDistance"], "num", numerator, "int64", errors);
-            OpenTrackIOHelpers::assignField(lensJson["entrancePupilDistance"], "denom", denominator, "int64", errors);
-
-            if (numerator.has_value() && denominator.has_value())
+            if (lensJson.contains("distortion"))
             {
-                lens.entrancePupilDistance = {numerator.value(), denominator.value()};
+                std::optional<std::vector<double>> radial = std::nullopt;
+                std::optional<std::vector<double>> tangential = std::nullopt;
+
+                OpenTrackIOHelpers::assignField(lensJson["distortion"], "radial", radial, "double", errors);
+                OpenTrackIOHelpers::assignField(lensJson["distortion"], "tangential", tangential, "double", errors);
+
+                if (radial.has_value())
+                {
+                    lens.distortion = Distortion();
+                    lens.distortion->radial = std::move(radial.value());
+                    lens.distortion->tangential = std::move(tangential);
+                }
             }
-        }
 
-        if (lensJson.contains("exposureFalloff"))
-        {
-            std::optional<double> a1 = std::nullopt;
-            std::optional<double> a2 = std::nullopt;
-            std::optional<double> a3 = std::nullopt;
+            OpenTrackIOHelpers::assignField(lensJson, "distortionOverscan", lens.distortionOverscan, "double", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "distortionScale", lens.distortionScale, "double", errors);
 
-            OpenTrackIOHelpers::assignField(lensJson["exposureFalloff"], "a1", a1, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson["exposureFalloff"], "a2", a2, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson["exposureFalloff"], "a3", a3, "double", errors);
-            
-            if (a1.has_value())
+            if (lensJson.contains("distortionShift"))
             {
-                lens.exposureFalloff = ExposureFalloff{a1.value(), std::move(a2), std::move(a3)};
+                std::optional<double> x = std::nullopt;
+                std::optional<double> y = std::nullopt;
+
+                OpenTrackIOHelpers::assignField(lensJson["distortionShift"], "x", x, "double", errors);
+                OpenTrackIOHelpers::assignField(lensJson["distortionShift"], "y", y, "double", errors);
+
+                if (x.has_value() && y.has_value())
+                {
+                    lens.distortionShift = DistortionShift{x.value(), y.value()};
+                }
             }
-        }
 
-        if (lensJson.contains("perspectiveShift"))
-        {
-            std::optional<double> x = std::nullopt;
-            std::optional<double> y = std::nullopt;
+            OpenTrackIOHelpers::assignField(lensJson, "encoders", lens.encoders, "double", errors);
 
-            OpenTrackIOHelpers::assignField(lensJson["perspectiveShift"], "Px", x, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson["perspectiveShift"], "Py", y, "double", errors);
-
-            if (x.has_value() && y.has_value())
+            if (lensJson.contains("entrancePupilOffset"))
             {
-                lens.perspectiveShift = PerspectiveShift{x.value(), y.value()};
+                std::optional<int64_t> numerator = std::nullopt;
+                std::optional<int64_t> denominator = std::nullopt;
+
+                OpenTrackIOHelpers::assignField(lensJson["entrancePupilOffset"], "num", numerator, "int64", errors);
+                OpenTrackIOHelpers::assignField(lensJson["entrancePupilOffset"], "denom", denominator, "int64", errors);
+
+                if (numerator.has_value() && denominator.has_value())
+                {
+                    lens.entrancePupilOffset = {numerator.value(), denominator.value()};
+                }
             }
+
+            if (lensJson.contains("exposureFalloff"))
+            {
+                std::optional<double> a1 = std::nullopt;
+                std::optional<double> a2 = std::nullopt;
+                std::optional<double> a3 = std::nullopt;
+
+                OpenTrackIOHelpers::assignField(lensJson["exposureFalloff"], "a1", a1, "double", errors);
+                OpenTrackIOHelpers::assignField(lensJson["exposureFalloff"], "a2", a2, "double", errors);
+                OpenTrackIOHelpers::assignField(lensJson["exposureFalloff"], "a3", a3, "double", errors);
+
+                if (a1.has_value())
+                {
+                    lens.exposureFalloff = ExposureFalloff{a1.value(), std::move(a2), std::move(a3)};
+                }
+            }
+
+            OpenTrackIOHelpers::assignField(lensJson, "fStop", lens.fStop, "uint32", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "focalLength", lens.focalLength, "double", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "focusDistance", lens.focusDistance, "uint32", errors);
+
+            if (lensJson.contains("perspectiveShift"))
+            {
+                std::optional<double> x = std::nullopt;
+                std::optional<double> y = std::nullopt;
+
+                OpenTrackIOHelpers::assignField(lensJson["perspectiveShift"], "x", x, "double", errors);
+                OpenTrackIOHelpers::assignField(lensJson["perspectiveShift"], "y", y, "double", errors);
+
+                if (x.has_value() && y.has_value())
+                {
+                    lens.perspectiveShift = PerspectiveShift{x.value(), y.value()};
+                }
+            }
+
+            OpenTrackIOHelpers::assignField(lensJson, "rawEncoders", lens.rawEncoders, "double", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "tStop", lens.tStop, "uint32", errors);
+
+            if (lensJson.contains("undistortion"))
+            {
+                std::optional<std::vector<double>> radial = std::nullopt;
+                std::optional<std::vector<double>> tangential = std::nullopt;
+
+                OpenTrackIOHelpers::assignField(lensJson["undistortion"], "radial", radial, "double", errors);
+                OpenTrackIOHelpers::assignField(lensJson["undistortion"], "tangential", tangential, "double", errors);
+
+                if (radial.has_value())
+                {
+                    lens.undistortion = Undistortion();
+                    lens.undistortion->radial = std::move(radial.value());
+                    lens.undistortion->tangential = std::move(tangential);
+                }
+            }            
         }
-        
-        OpenTrackIOHelpers::assignField(lensJson, "encoders", lens.encoders, "double", errors);
-        OpenTrackIOHelpers::assignField(lensJson, "rawEncoders", lens.rawEncoders, "double", errors);
-        OpenTrackIOHelpers::assignField(lensJson, "distortionOverscan", lens.distortionOverscan, "double", errors);
-        OpenTrackIOHelpers::assignField(lensJson, "distortionScale", lens.distortionScale, "double", errors);
-        OpenTrackIOHelpers::assignField(lensJson, "fStop", lens.fStop, "uint32", errors);
-        OpenTrackIOHelpers::assignField(lensJson, "tStop", lens.tStop, "uint32", errors);
-        OpenTrackIOHelpers::assignField(lensJson, "focalLength", lens.focalLength, "double", errors);
-        OpenTrackIOHelpers::assignField(lensJson, "focusDistance", lens.focusDistance, "uint32", errors);
-        OpenTrackIOHelpers::assignField(lensJson, "nominalFocalLength", lens.nominalFocalLength, "uint32", errors);
-        OpenTrackIOHelpers::assignField(lensJson, "firmwareVersion", lens.firmwareVersion, "string", errors);
-        OpenTrackIOHelpers::assignField(lensJson, "make", lens.make, "string", errors);
-        OpenTrackIOHelpers::assignField(lensJson, "model", lens.model, "string", errors);
-        OpenTrackIOHelpers::assignField(lensJson, "serialNumber", lens.serialNumber, "string", errors);
         
         return lens;
     }
@@ -310,30 +292,41 @@ namespace opentrackio::opentrackioproperties
         }
         
         Protocol pro{};
-        if (!OpenTrackIOHelpers::checkTypeAndSetField(json["protocol"], pro.version))
+        if (!OpenTrackIOHelpers::checkTypeAndSetField(json["name"], pro.name))
         {
             errors.emplace_back("field: protocol isn't of type: string");
             return std::nullopt;
         }
+
+
+        std::optional<std::string> versionStr;
+        const std::regex pattern{R"(^[0-9]+.[0-9]+.[0-9]+$)"};
+        OpenTrackIOHelpers::assignRegexField(json, "version", versionStr, pattern, errors);
+        
+        if (!versionStr.has_value())
+        {
+            return std::nullopt;
+        }
+        pro.version = std::move(versionStr.value());
         
         return pro;
     }
 
-    std::optional<RelatedSamples> RelatedSamples::parse(const nlohmann::json &json, std::vector<std::string>& errors)
+    std::optional<RelatedSampleIds> RelatedSampleIds::parse(const nlohmann::json &json, std::vector<std::string>& errors)
     {
-        if (!json.contains("relatedSamples"))
+        if (!json.contains("relatedSampleIds"))
         {
             return std::nullopt;
         }
 
-        if (!json["relatedSamples"].is_array())
+        if (!json["relatedSampleIds"].is_array())
         {
-            errors.emplace_back("field: relatedSamples isn't of type: array");
+            errors.emplace_back("field: relatedSampleIds isn't of type: array");
             return std::nullopt;
         }
 
-        RelatedSamples rs{};
-        const auto& rsJson = json["relatedSamples"];
+        RelatedSampleIds rs{};
+        const auto& rsJson = json["relatedSampleIds"];
         const std::regex pattern{R"(^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$)"};
         
         for (const auto& item : rsJson.items()) 
@@ -341,14 +334,14 @@ namespace opentrackio::opentrackioproperties
             std::string str;
             if (!OpenTrackIOHelpers::checkTypeAndSetField(item.value(), str)) 
             {
-                errors.emplace_back("field: relatedSample/element isn't of type: string");
+                errors.emplace_back("field: relatedSampleIds/element isn't of type: string");
                 continue;
             }
 
             // Check the string received to ensure that it matches the pattern described by the spec.
             if (std::smatch res; !std::regex_match(str, res, pattern))
             {
-                errors.emplace_back("field: relatedSample/element doesn't match required pattern");
+                errors.emplace_back("field: relatedSampleIds/element doesn't match required pattern");
                 continue;
             }
             
@@ -419,6 +412,8 @@ namespace opentrackio::opentrackioproperties
         {
             timing.sampleTimestamp = opentrackiotypes::Timestamp::parse(timingJson["sampleTimestamp"], errors);
         }
+
+        OpenTrackIOHelpers::assignField(timingJson, "sequenceNumber", timing.sequenceNumber, "uint16", errors);
         
         if (timingJson.contains("synchronization"))
         {
@@ -429,9 +424,7 @@ namespace opentrackio::opentrackioproperties
         {
             timing.timecode = opentrackiotypes::Timecode::parse(timingJson["timecode"], errors);
         }
-
-        OpenTrackIOHelpers::assignField(timingJson, "sequenceNumber", timing.sequenceNumber, "uint16", errors);
-
+        
         return timing;
     }
 
@@ -509,13 +502,55 @@ namespace opentrackio::opentrackioproperties
         }
 
         OpenTrackIOHelpers::assignField(json, "present", outSync.present, "bool", errors);
-        OpenTrackIOHelpers::assignField(json, "ptp_domain", outSync.ptpDomain, "uint16", errors);
-        OpenTrackIOHelpers::assignField(json, "ptp_offset", outSync.ptpOffset, "double", errors);
-        const std::regex pattern{R"(^([A-F0-9]{2}:){5}[A-F0-9]{2}$)"};
-        OpenTrackIOHelpers::assignRegexField(json, "ptp_master", outSync.ptpMaster, pattern, errors);
+        
+        if (json.contains("ptp"))
+        {
+            outSync.ptp = Synchronization::Ptp{};
+            OpenTrackIOHelpers::assignField(json["ptp"], "domain", outSync.ptp->domain, "uint16", errors);
+            OpenTrackIOHelpers::assignField(json["ptp"], "offset", outSync.ptp->offset, "double", errors);
+            const std::regex pattern{R"(^([A-F0-9]{2}:){5}[A-F0-9]{2}$)"};
+            OpenTrackIOHelpers::assignRegexField(json["ptp"], "master", outSync.ptp->master, pattern, errors);
+
+            if (!outSync.ptp->domain.has_value() && !outSync.ptp->offset.has_value() && !outSync.ptp->master.has_value())
+            {
+                outSync.ptp = std::nullopt;
+            }
+        }
         
         return outSync;
     }
+
+    std::optional<Tracker> Tracker::parse(const nlohmann::json &json, std::vector<std::string>& errors)
+    {
+        if (!json.contains("tracker") && (!json.contains("static") || !json["static"].contains("tracker")))
+        {
+            return std::nullopt;
+        }
+
+        Tracker tkr{};
+
+        // ------- Static Fields
+        if (json.contains("static") && json["static"].contains("tracker"))
+        {
+            const auto& tkrJson = json["static"]["tracker"];
+            OpenTrackIOHelpers::assignField(tkrJson, "firmwareVersion", tkr.firmwareVersion, "string", errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "make", tkr.make, "string", errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "model", tkr.model, "string", errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "serialNumber", tkr.serialNumber, "string", errors);
+        }
+        
+        // ------- Standard Fields
+        if (json.contains("tracker"))
+        {
+            const auto& tkrJson = json["tracker"];
+            OpenTrackIOHelpers::assignField(tkrJson, "notes", tkr.notes, "string", errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "recording", tkr.recording, "boolean", errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "slate", tkr.slate, "string", errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "status", tkr.status, "string", errors);
+        }
+        
+        return tkr;
+    }    
 
     std::optional<Transforms> Transforms::parse(const nlohmann::json &json, std::vector<std::string>& errors)
     {
@@ -546,4 +581,4 @@ namespace opentrackio::opentrackioproperties
         
         return tfs;
     }
-} // mosys::opentrackioproperties
+} // opentrackioproperties

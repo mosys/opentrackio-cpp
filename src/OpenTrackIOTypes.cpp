@@ -78,15 +78,15 @@ namespace opentrackio::opentrackiotypes
 
     std::optional<Timecode> Timecode::parse(const nlohmann::json &json, std::vector<std::string> &errors)
     {
-        std::optional<uint32_t> hours = std::nullopt;
-        std::optional<uint32_t> minutes = std::nullopt;
-        std::optional<uint32_t> seconds = std::nullopt;
-        std::optional<uint32_t> frames = std::nullopt;
+        std::optional<uint8_t> hours = std::nullopt;
+        std::optional<uint8_t> minutes = std::nullopt;
+        std::optional<uint8_t> seconds = std::nullopt;
+        std::optional<uint8_t> frames = std::nullopt;
 
-        OpenTrackIOHelpers::assignField(json, "hours", hours, "uint32", errors);
-        OpenTrackIOHelpers::assignField(json, "minutes", minutes, "uint32", errors);
-        OpenTrackIOHelpers::assignField(json, "seconds", seconds, "uint32", errors);
-        OpenTrackIOHelpers::assignField(json, "frames", frames, "uint32", errors);
+        OpenTrackIOHelpers::assignField(json, "hours", hours, "uint8", errors);
+        OpenTrackIOHelpers::assignField(json, "minutes", minutes, "uint8", errors);
+        OpenTrackIOHelpers::assignField(json, "seconds", seconds, "uint8", errors);
+        OpenTrackIOHelpers::assignField(json, "frames", frames, "uint8", errors);
 
         if (!hours.has_value() || !minutes.has_value() || !seconds.has_value() || !frames.has_value())
         {
@@ -105,9 +105,10 @@ namespace opentrackio::opentrackiotypes
             errors.emplace_back("field: timing/timecode/format is missing required fields");
             return std::nullopt;
         }
-
+        
         auto fr = Rational::parse(json["format"]["frameRate"], errors);
         bool drop;
+        std::optional<bool> odd;
 
         if (!OpenTrackIOHelpers::checkTypeAndSetField(json["format"]["dropFrame"], drop))
         {
@@ -119,9 +120,10 @@ namespace opentrackio::opentrackiotypes
         {
             return std::nullopt;
         }
+        
+        OpenTrackIOHelpers::assignField(json["format"], "oddField", odd, "bool", errors);
 
-        return Timecode{hours.value(), minutes.value(), seconds.value(), frames.value(),
-                        fr.value(), drop};
+        return Timecode{hours.value(), minutes.value(), seconds.value(), frames.value(), Format{fr.value(), drop, odd}};
     }
 
     std::optional<Timestamp> Timestamp::parse(const nlohmann::json &json, std::vector<std::string> &errors)
@@ -180,12 +182,9 @@ namespace opentrackio::opentrackiotypes
         tf.rotation = rotation.value();
 
         // Non-required fields ------
-        std::optional<Vector3> scale = std::nullopt;
-        OpenTrackIOHelpers::assignField(json, "scale", scale, "float", errors);
-        tf.scale = scale.value_or(Vector3{0, 0, 0});
-
-        OpenTrackIOHelpers::assignField(json, "name", tf.name, "string", errors);
-        OpenTrackIOHelpers::assignField(json, "parent", tf.parent, "string", errors);
+        OpenTrackIOHelpers::assignField(json, "scale", tf.scale, "float", errors);
+        OpenTrackIOHelpers::assignField(json, "transformId", tf.transformId, "string", errors);
+        OpenTrackIOHelpers::assignField(json, "parentTransformId", tf.parentTransformId, "string", errors);
 
         return tf;
     }
