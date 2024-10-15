@@ -296,7 +296,8 @@ namespace opentrackio::opentrackioproperties
         }
         
         Protocol pro{};
-        if (!OpenTrackIOHelpers::checkTypeAndSetField(json["name"], pro.name))
+        const auto& proJson = json["protocol"];
+        if (!OpenTrackIOHelpers::checkTypeAndSetField(proJson["name"], pro.name))
         {
             errors.emplace_back("field: protocol isn't of type: string");
             return std::nullopt;
@@ -305,7 +306,7 @@ namespace opentrackio::opentrackioproperties
 
         std::optional<std::string> versionStr;
         const std::regex pattern{R"(^[0-9]+.[0-9]+.[0-9]+$)"};
-        OpenTrackIOHelpers::assignRegexField(json, "version", versionStr, pattern, errors);
+        OpenTrackIOHelpers::assignRegexField(proJson, "version", versionStr, pattern, errors);
         
         if (!versionStr.has_value())
         {
