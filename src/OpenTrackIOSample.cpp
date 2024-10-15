@@ -164,34 +164,21 @@ namespace opentrackio
 
 
         // ------- Standard Fields
+        assignJson(baseJson["lens"], "custom", lens->custom);
+        
         if (lens->distortion.has_value())
         {
             baseJson["lens"]["distortion"]["radial"] = lens->distortion->radial;
             assignJson(baseJson["lens"]["distortion"], "tangential", lens->distortion->tangential);
         }
 
-        if (lens->undistortion.has_value())
-        {
-            baseJson["lens"]["undistortion"]["radial"] = lens->undistortion->radial;
-            assignJson(baseJson["lens"]["undistortion"], "tangential", lens->undistortion->tangential);
-        }
+        assignJson(baseJson["lens"], "distortionOverscan", lens->distortionOverscan);
+        assignJson(baseJson["lens"], "distortionScale", lens->distortionScale);
 
         if (lens->distortionShift.has_value())
         {
-            baseJson["lens"]["distortionShift"]["Cx"] = lens->distortionShift->x;
-            baseJson["lens"]["distortionShift"]["Cy"] = lens->distortionShift->y;
-        }
-
-        if (lens->perspectiveShift.has_value())
-        {
-            baseJson["lens"]["perspectiveShift"]["Px"] = lens->perspectiveShift->x;
-            baseJson["lens"]["perspectiveShift"]["Py"] = lens->perspectiveShift->y;
-        }
-
-        if (lens->entrancePupilDistance.has_value())
-        {
-            baseJson["lens"]["entrancePupilDistance"]["num"] = lens->entrancePupilDistance->numerator;
-            baseJson["lens"]["entrancePupilDistance"]["denom"] = lens->entrancePupilDistance->denominator;
+            baseJson["lens"]["distortionShift"]["x"] = lens->distortionShift->x;
+            baseJson["lens"]["distortionShift"]["y"] = lens->distortionShift->y;
         }
 
         if (lens->encoders.has_value())
@@ -201,11 +188,10 @@ namespace opentrackio
             assignJson(baseJson["lens"]["encoders"], "zoom", lens->encoders->zoom);
         }
 
-        if (lens->rawEncoders.has_value())
+        if (lens->entrancePupilOffset.has_value())
         {
-            assignJson(baseJson["lens"]["rawEncoders"], "focus", lens->rawEncoders->focus);
-            assignJson(baseJson["lens"]["rawEncoders"], "iris", lens->rawEncoders->iris);
-            assignJson(baseJson["lens"]["rawEncoders"], "zoom", lens->rawEncoders->zoom);
+            baseJson["lens"]["entrancePupilOffset"]["num"] = lens->entrancePupilOffset->numerator;
+            baseJson["lens"]["entrancePupilOffset"]["denom"] = lens->entrancePupilOffset->denominator;
         }
 
         if (lens->exposureFalloff.has_value())
@@ -215,13 +201,30 @@ namespace opentrackio
             assignJson(baseJson["lens"]["exposureFalloff"], "a3", lens->exposureFalloff->a3);
         }
 
-        assignJson(baseJson["lens"], "custom", lens->custom);
-        assignJson(baseJson["lens"], "distortionOverscan", lens->distortionOverscan);
-        assignJson(baseJson["lens"], "distortionScale", lens->distortionScale);
         assignJson(baseJson["lens"], "fStop", lens->fStop);
-        assignJson(baseJson["lens"], "tStop", lens->tStop);
         assignJson(baseJson["lens"], "focalLength", lens->focalLength);
         assignJson(baseJson["lens"], "focusDistance", lens->focusDistance);
+
+        if (lens->perspectiveShift.has_value())
+        {
+            baseJson["lens"]["perspectiveShift"]["x"] = lens->perspectiveShift->x;
+            baseJson["lens"]["perspectiveShift"]["y"] = lens->perspectiveShift->y;
+        }
+        
+        if (lens->rawEncoders.has_value())
+        {
+            assignJson(baseJson["lens"]["rawEncoders"], "focus", lens->rawEncoders->focus);
+            assignJson(baseJson["lens"]["rawEncoders"], "iris", lens->rawEncoders->iris);
+            assignJson(baseJson["lens"]["rawEncoders"], "zoom", lens->rawEncoders->zoom);
+        }
+        
+        assignJson(baseJson["lens"], "tStop", lens->tStop);
+
+        if (lens->undistortion.has_value())
+        {
+            baseJson["lens"]["undistortion"]["radial"] = lens->undistortion->radial;
+            assignJson(baseJson["lens"]["undistortion"], "tangential", lens->undistortion->tangential);
+        }
     }
 
     void OpenTrackIOSample::parseProtocolToJson(nlohmann::json &baseJson)
@@ -287,18 +290,6 @@ namespace opentrackio
         assignJson(baseJson["timing"], "sampleTimestamp", timing->sampleTimestamp);
         assignJson(baseJson["timing"], "sequenceNumber", timing->sequenceNumber);
 
-        if (timing->timecode.has_value())
-        {
-            baseJson["timing"]["timecode"]["hours"] = timing->timecode->hours;
-            baseJson["timing"]["timecode"]["minutes"] = timing->timecode->minutes;
-            baseJson["timing"]["timecode"]["seconds"] = timing->timecode->seconds;
-            baseJson["timing"]["timecode"]["frames"] = timing->timecode->frames;
-            baseJson["timing"]["timecode"]["format"]["frameRate"]["num"] = timing->timecode->format.frameRate.numerator;
-            baseJson["timing"]["timecode"]["format"]["frameRate"]["denom"] = timing->timecode->format.frameRate.denominator;
-            baseJson["timing"]["timecode"]["format"]["dropFrame"] = timing->timecode->format.dropFrame;
-            assignJson(baseJson["timing"]["timecode"]["format"], "oddField", timing->timecode->format.oddField);
-        }
-
         if (timing->synchronization.has_value())
         {
             baseJson["timing"]["synchronization"]["frequency"]["num"] = timing->synchronization->frequency.numerator;
@@ -338,6 +329,18 @@ namespace opentrackio
                 assignJson(baseJson["timing"]["synchronization"]["ptp"], "offset", ptp.offset);
                 assignJson(baseJson["timing"]["synchronization"]["ptp"], "domain", ptp.domain);                
             }
+        }
+
+        if (timing->timecode.has_value())
+        {
+            baseJson["timing"]["timecode"]["hours"] = timing->timecode->hours;
+            baseJson["timing"]["timecode"]["minutes"] = timing->timecode->minutes;
+            baseJson["timing"]["timecode"]["seconds"] = timing->timecode->seconds;
+            baseJson["timing"]["timecode"]["frames"] = timing->timecode->frames;
+            baseJson["timing"]["timecode"]["format"]["frameRate"]["num"] = timing->timecode->format.frameRate.numerator;
+            baseJson["timing"]["timecode"]["format"]["frameRate"]["denom"] = timing->timecode->format.frameRate.denominator;
+            baseJson["timing"]["timecode"]["format"]["dropFrame"] = timing->timecode->format.dropFrame;
+            assignJson(baseJson["timing"]["timecode"]["format"], "oddField", timing->timecode->format.oddField);
         }
     }
 
