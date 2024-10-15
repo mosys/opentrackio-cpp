@@ -61,14 +61,14 @@ namespace opentrackio
     {
         m_json = json;
         camera = opentrackioproperties::Camera::parse(json, m_errorMessages);
-        device = opentrackioproperties::Device::parse(json, m_errorMessages);
         duration = opentrackioproperties::Duration::parse(json, m_errorMessages);
         globalStage = opentrackioproperties::GlobalStage::parse(json, m_errorMessages);
         lens = opentrackioproperties::Lens::parse(json, m_errorMessages);
         protocol = opentrackioproperties::Protocol::parse(json, m_errorMessages);
-        relatedSamples = opentrackioproperties::RelatedSamples::parse(json, m_errorMessages);
+        relatedSampleIds = opentrackioproperties::RelatedSampleIds::parse(json, m_errorMessages);
         sampleId = opentrackioproperties::SampleId::parse(json, m_errorMessages);
         timing = opentrackioproperties::Timing::parse(json, m_errorMessages);
+        tracker = opentrackioproperties::Tracker::parse(json, m_errorMessages);
         transforms = opentrackioproperties::Transforms::parse(json, m_errorMessages);
         return true;
     }
@@ -100,33 +100,16 @@ namespace opentrackio
         namespace props = opentrackioproperties;
         
         nlohmann::json j;
-        
-        if (duration.has_value())
-        {
-            j["duration"]["num"] = duration->rational.numerator;
-            j["duration"]["denom"] = duration->rational.denominator;
-        }
-        
-        if (protocol.has_value())
-        {
-            j["protocol"] = protocol->version;
-        }
-        
-        if (relatedSamples.has_value())
-        {
-            j["relatedSamples"] = relatedSamples->samples;
-        }
-        
-        if (sampleId.has_value())
-        {
-            j["sampleId"] = sampleId->id;
-        }
 
         parseCameraToJson(j);
-        parseDeviceToJson(j);
+        parseDurationToJson(j);
         parseLensToJson(j);
+        parseProtocolToJson(j);
+        parseRelatedSampleIdsToJson(j);
+        parseSampleIdToJson(j);
         parseGlobalStageToJson(j);
         parseTimingToJson(j);
+        parseTrackerToJson(j);
         parseTransformsToJson(j);
         
         m_json = j;
@@ -139,37 +122,31 @@ namespace opentrackio
             return;
         }
         
-        auto& cameraJson = baseJson["camera"];
+        auto& cameraJson = baseJson["static"]["camera"];
         assignJson(cameraJson, "activeSensorPhysicalDimensions", camera->activeSensorPhysicalDimensions);
         assignJson(cameraJson, "activeSensorResolution", camera->activeSensorResolution);
-        assignJson(cameraJson, "captureRate", camera->captureRate);
         assignJson(cameraJson, "anamorphicSqueeze", camera->anamorphicSqueeze);
         assignJson(cameraJson, "firmwareVersion", camera->firmwareVersion);
-        assignJson(cameraJson, "id", camera->id);
+        assignJson(cameraJson, "label", camera->label);
         assignJson(cameraJson, "make", camera->make);
         assignJson(cameraJson, "model", camera->model);
         assignJson(cameraJson, "serialNumber", camera->serialNumber);
+        assignJson(cameraJson, "captureRate", camera->captureRate);
         assignJson(cameraJson, "fdlLink", camera->fdlLink);
         assignJson(cameraJson, "isoSpeed", camera->isoSpeed);
         assignJson(cameraJson, "shutterAngle", camera->shutterAngle);
     }
 
-    void OpenTrackIOSample::parseDeviceToJson(nlohmann::json& baseJson)
+    void OpenTrackIOSample::parseDurationToJson(nlohmann::json &baseJson)
     {
-        if (!device.has_value())
+        if (!duration.has_value())
         {
             return;
         }
-        
-        assignJson(baseJson["device"], "firmwareVersion", device->firmwareVersion);
-        assignJson(baseJson["device"], "make", device->make);
-        assignJson(baseJson["device"], "model", device->model);
-        assignJson(baseJson["device"], "notes", device->notes);
-        assignJson(baseJson["device"], "recording", device->recording);
-        assignJson(baseJson["device"], "serialNumber", device->serialNumber);
-        assignJson(baseJson["device"], "slate", device->slate);
-        assignJson(baseJson["device"], "status", device->status);
-    }
+
+        baseJson["static"]["duration"]["num"] = duration->rational.numerator;
+        baseJson["static"]["duration"]["denom"] = duration->rational.denominator;
+    }    
 
     void OpenTrackIOSample::parseLensToJson(nlohmann::json& baseJson)
     {
@@ -178,6 +155,15 @@ namespace opentrackio
             return;
         }
         
+        // ------- Static Fields
+        assignJson(baseJson["static"]["lens"], "firmwareVersion", lens->firmwareVersion);
+        assignJson(baseJson["static"]["lens"], "make", lens->make);
+        assignJson(baseJson["static"]["lens"], "model", lens->model);
+        assignJson(baseJson["static"]["lens"], "nominalFocalLength", lens->nominalFocalLength);
+        assignJson(baseJson["static"]["lens"], "serialNumber", lens->serialNumber);
+
+
+        // ------- Standard Fields
         if (lens->distortion.has_value())
         {
             baseJson["lens"]["distortion"]["radial"] = lens->distortion->radial;
@@ -234,15 +220,41 @@ namespace opentrackio
         assignJson(baseJson["lens"], "distortionScale", lens->distortionScale);
         assignJson(baseJson["lens"], "fStop", lens->fStop);
         assignJson(baseJson["lens"], "tStop", lens->tStop);
-        assignJson(baseJson["lens"], "firmwareVersion", lens->firmwareVersion);
         assignJson(baseJson["lens"], "focalLength", lens->focalLength);
         assignJson(baseJson["lens"], "focusDistance", lens->focusDistance);
-        assignJson(baseJson["lens"], "make", lens->make);
-        assignJson(baseJson["lens"], "model", lens->model);
-        assignJson(baseJson["lens"], "nominalFocalLength", lens->nominalFocalLength);
-        assignJson(baseJson["lens"], "serialNumber", lens->serialNumber);
     }
 
+    void OpenTrackIOSample::parseProtocolToJson(nlohmann::json &baseJson)
+    {
+        if (!protocol.has_value())
+        {
+            return;
+        }
+        
+        baseJson["protocol"]["name"] = protocol->name;
+        baseJson["protocol"]["version"] = protocol->version;
+    }
+
+    void OpenTrackIOSample::parseRelatedSampleIdsToJson(nlohmann::json &baseJson)
+    {
+        if (!relatedSampleIds.has_value())
+        {
+            return;
+        }
+
+        baseJson["relatedSampleIds"] = relatedSampleIds->samples;
+    }
+
+    void OpenTrackIOSample::parseSampleIdToJson(nlohmann::json &baseJson)
+    {
+        if (!sampleId.has_value())
+        {
+            return;
+        }
+
+        baseJson["sampleId"] = sampleId->id;
+    }    
+    
     void OpenTrackIOSample::parseGlobalStageToJson(nlohmann::json &baseJson)
     {
         if (!globalStage.has_value())
@@ -281,14 +293,18 @@ namespace opentrackio
             baseJson["timing"]["timecode"]["minutes"] = timing->timecode->minutes;
             baseJson["timing"]["timecode"]["seconds"] = timing->timecode->seconds;
             baseJson["timing"]["timecode"]["frames"] = timing->timecode->frames;
-            baseJson["timing"]["timecode"]["format"]["dropFrame"] = timing->timecode->dropFrame;
-            baseJson["timing"]["timecode"]["format"]["frameRate"]["num"] = timing->timecode->frameRate.numerator;
-            baseJson["timing"]["timecode"]["format"]["frameRate"]["denom"] = timing->timecode->frameRate.denominator;
+            baseJson["timing"]["timecode"]["format"]["frameRate"]["num"] = timing->timecode->format.frameRate.numerator;
+            baseJson["timing"]["timecode"]["format"]["frameRate"]["denom"] = timing->timecode->format.frameRate.denominator;
+            baseJson["timing"]["timecode"]["format"]["dropFrame"] = timing->timecode->format.dropFrame;
+            assignJson(baseJson["timing"]["timecode"]["format"], "oddField", timing->timecode->format.oddField);
         }
 
         if (timing->synchronization.has_value())
         {
-            auto& syncJson = baseJson["timing"]["synchronization"];
+            baseJson["timing"]["synchronization"]["frequency"]["num"] = timing->synchronization->frequency.numerator;
+            baseJson["timing"]["synchronization"]["frequency"]["denom"] = timing->synchronization->frequency.denominator;
+            baseJson["timing"]["synchronization"]["locked"] = timing->synchronization->locked;
+            
             switch(timing->synchronization->source)
             {
                 case opentrackioproperties::Timing::Synchronization::SourceType::GEN_LOCK:
@@ -304,26 +320,47 @@ namespace opentrackio
                     baseJson["timing"]["synchronization"]["source"] = "ntp";
                     break;
             }
-            baseJson["timing"]["synchronization"]["frequency"]["num"] = timing->synchronization->frequency.numerator;
-            baseJson["timing"]["synchronization"]["frequency"]["denom"] = timing->synchronization->frequency.denominator;
-            baseJson["timing"]["synchronization"]["locked"] = timing->synchronization->locked;
-            assignJson(baseJson["timing"]["synchronization"], "present", timing->synchronization->present);
-            assignJson(baseJson["timing"]["synchronization"], "ptpMaster", timing->synchronization->ptpMaster);
-            assignJson(baseJson["timing"]["synchronization"], "ptpOffset", timing->synchronization->ptpOffset);
-            assignJson(baseJson["timing"]["synchronization"], "ptpDomain", timing->synchronization->ptpDomain);
 
             if (timing->synchronization->offsets.has_value())
             {
-                assignJson(baseJson["timing"]["synchronization"]["offsets"], "translation",
-                           timing->synchronization->offsets->translation);
-                assignJson(baseJson["timing"]["synchronization"]["offsets"], "rotation",
-                           timing->synchronization->offsets->rotation);
-                assignJson(baseJson["timing"]["synchronization"]["offsets"], "encoders",
-                           timing->synchronization->offsets->encoders);
+                const auto& offsets = timing->synchronization->offsets.value();
+                assignJson(baseJson["timing"]["synchronization"]["offsets"], "translation", offsets.translation);
+                assignJson(baseJson["timing"]["synchronization"]["offsets"], "rotation", offsets.rotation);
+                assignJson(baseJson["timing"]["synchronization"]["offsets"], "encoders", offsets.encoders);
+            }            
+            
+            assignJson(baseJson["timing"]["synchronization"], "present", timing->synchronization->present);
+            
+            if (timing->synchronization->ptp.has_value())
+            {
+                const auto& ptp = timing->synchronization->ptp.value();
+                assignJson(baseJson["timing"]["synchronization"]["ptp"], "master", ptp.master);
+                assignJson(baseJson["timing"]["synchronization"]["ptp"], "offset", ptp.offset);
+                assignJson(baseJson["timing"]["synchronization"]["ptp"], "domain", ptp.domain);                
             }
         }
     }
 
+    void OpenTrackIOSample::parseTrackerToJson(nlohmann::json& baseJson)
+    {
+        if (!tracker.has_value())
+        {
+            return;
+        }
+
+        // ------- Static Fields
+        assignJson(baseJson["static"]["tracker"], "firmwareVersion", tracker->firmwareVersion);
+        assignJson(baseJson["static"]["tracker"], "make", tracker->make);
+        assignJson(baseJson["static"]["tracker"], "model", tracker->model);
+        assignJson(baseJson["static"]["tracker"], "serialNumber", tracker->serialNumber);
+
+        // ------- Standard Fields
+        assignJson(baseJson["tracker"], "notes", tracker->notes);
+        assignJson(baseJson["tracker"], "recording", tracker->recording);
+        assignJson(baseJson["tracker"], "slate", tracker->slate);
+        assignJson(baseJson["tracker"], "status", tracker->status);
+    }    
+    
     void OpenTrackIOSample::parseTransformsToJson(nlohmann::json& baseJson)
     {
         if (!transforms.has_value())
@@ -337,8 +374,8 @@ namespace opentrackio
             nlohmann::json tfJson{};
             tfJson["translation"] = {{"x", tf.translation.x}, {"y", tf.translation.y}, {"z", tf.translation.z}};
             tfJson["rotation"] = {{"pan", tf.rotation.pan}, {"tilt", tf.rotation.tilt}, {"roll", tf.rotation.roll}};
-            assignJson(tfJson, "name", tf.name);
-            assignJson(tfJson, "parent", tf.parent);
+            assignJson(tfJson, "transformId", tf.transformId);
+            assignJson(tfJson, "parentTransformId", tf.parentTransformId);
             if (tf.scale.has_value())
             {
                 tfJson["scale"] = {{"x", tf.scale->x}, {"y", tf.scale->y}, {"z", tf.scale->z}};

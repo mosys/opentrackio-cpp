@@ -62,18 +62,23 @@ namespace opentrackio::opentrackiotypes
 
     struct Timecode
     {
-        uint32_t hours = 0;
-        uint32_t minutes = 0;
-        uint32_t seconds = 0;
-        uint32_t frames = 0;
-        Rational frameRate{};
-        bool dropFrame = false;
-
+        uint8_t hours = 0;
+        uint8_t minutes = 0;
+        uint8_t seconds = 0;
+        uint8_t frames = 0;
+        
+        struct Format
+        {
+            Rational frameRate{};
+            bool dropFrame = false;
+            std::optional<bool> oddField = std::nullopt;            
+        };
+        Format format{};
+        
         Timecode() = default;
 
-        Timecode(uint32_t h, uint32_t m, uint32_t s, uint32_t f, Rational fr, bool drop)
-                : hours{h}, minutes{m}, seconds{s}, frames{f}, frameRate{fr}, dropFrame{drop}
-        {}
+        Timecode(uint8_t h, uint8_t m, uint8_t s, uint8_t f, Format fmt)
+                : hours{h}, minutes{m}, seconds{s}, frames{f}, format{fmt} {};
 
         static std::optional<Timecode> parse(const nlohmann::json &json, std::vector<std::string> &errors);
     };
@@ -110,15 +115,13 @@ namespace opentrackio::opentrackiotypes
         Vector3 translation{};
         Rotation rotation{};
         std::optional<Vector3> scale = std::nullopt;
-        std::optional<std::string> name = std::nullopt;
-        std::optional<std::string> parent = std::nullopt;
+        std::optional<std::string> transformId = std::nullopt;
+        std::optional<std::string> parentTransformId = std::nullopt;
 
         Transform() = default;
 
-        Transform(Vector3 trans, Rotation rot, std::string_view nameStr) : translation{trans}, rotation{rot},
-                                                                           name{nameStr}
-        {};
-
+        Transform(Vector3 trans, Rotation rot) : translation{trans}, rotation{rot} {};
+        
         static std::optional<Transform> parse(const nlohmann::json &json, std::vector<std::string> &errors);
     };
 } // namespace opentrackio::opentrackiotypes
