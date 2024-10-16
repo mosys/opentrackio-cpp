@@ -16,7 +16,7 @@
 
 namespace opentrackio::opentrackiotypes
 {
-    std::optional<Rational> Rational::parse(const nlohmann::json &json, std::vector<std::string> &errors)
+    std::optional<Rational> Rational::parse(nlohmann::json &json, std::vector<std::string> &errors)
     {
         uint32_t num;
         uint32_t denom;
@@ -36,7 +36,7 @@ namespace opentrackio::opentrackiotypes
         return Rational(num, denom);
     }
 
-    std::optional<Vector3> Vector3::parse(const nlohmann::json &json, std::vector<std::string> &errors)
+    std::optional<Vector3> Vector3::parse(nlohmann::json &json, std::vector<std::string> &errors)
     {
         Vector3 vec{};
         if (!json.contains("x") || !json.contains("y") || !json.contains("z"))
@@ -56,7 +56,7 @@ namespace opentrackio::opentrackiotypes
         return vec;
     }
 
-    std::optional<Rotation> Rotation::parse(const nlohmann::json &json, std::vector<std::string> &errors)
+    std::optional<Rotation> Rotation::parse(nlohmann::json &json, std::vector<std::string> &errors)
     {
         Rotation rot{};
         if (!json.contains("pan") || !json.contains("tilt") || !json.contains("roll"))
@@ -76,7 +76,7 @@ namespace opentrackio::opentrackiotypes
         return rot;
     }
 
-    std::optional<Timecode> Timecode::parse(const nlohmann::json &json, std::vector<std::string> &errors)
+    std::optional<Timecode> Timecode::parse(nlohmann::json &json, std::vector<std::string> &errors)
     {
         std::optional<uint8_t> hours = std::nullopt;
         std::optional<uint8_t> minutes = std::nullopt;
@@ -126,7 +126,7 @@ namespace opentrackio::opentrackiotypes
         return Timecode{hours.value(), minutes.value(), seconds.value(), frames.value(), Format{fr.value(), drop, odd}};
     }
 
-    std::optional<Timestamp> Timestamp::parse(const nlohmann::json &json, std::vector<std::string> &errors)
+    std::optional<Timestamp> Timestamp::parse(nlohmann::json &json, std::vector<std::string> &errors)
     {
         std::optional<uint64_t> seconds = std::nullopt;
         std::optional<uint32_t> nanoseconds = std::nullopt;
@@ -145,7 +145,7 @@ namespace opentrackio::opentrackiotypes
         return Timestamp(seconds.value(), nanoseconds.value(), attoseconds.value_or(0));
     }
 
-    std::optional<Dimensions> Dimensions::parse(const nlohmann::json &json, std::vector<std::string> &errors)
+    std::optional<Dimensions> Dimensions::parse(nlohmann::json &json, std::vector<std::string> &errors)
     {
         std::optional<uint32_t> width = std::nullopt;
         std::optional<uint32_t> height = std::nullopt;
@@ -162,7 +162,7 @@ namespace opentrackio::opentrackiotypes
         return Dimensions(width.value(), height.value());
     }
 
-    std::optional<Transform> Transform::parse(const nlohmann::json &json, std::vector<std::string> &errors)
+    std::optional<Transform> Transform::parse(nlohmann::json &json, std::vector<std::string> &errors)
     {
         Transform tf{};
 
