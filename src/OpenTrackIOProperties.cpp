@@ -44,16 +44,20 @@ namespace opentrackio::opentrackioproperties
             cam.activeSensorResolution = opentrackiotypes::Dimensions::parse(cameraJson["activeSensorResolution"], errors);
         }
 
-        OpenTrackIOHelpers::assignField(cameraJson, "anamorphicSqueeze", cam.anamorphicSqueeze, "integer", errors);
+        if (cameraJson.contains("anamorphicSqueeze"))
+        {
+            cam.anamorphicSqueeze = opentrackiotypes::Rational::parse(cameraJson["anamorphicSqueeze"], errors);
+        }
+        
         OpenTrackIOHelpers::assignField(cameraJson, "firmwareVersion", cam.firmwareVersion, "string", errors);
         OpenTrackIOHelpers::assignField(cameraJson, "label", cam.label, "string", errors);
         OpenTrackIOHelpers::assignField(cameraJson, "make", cam.make, "string", errors);
         OpenTrackIOHelpers::assignField(cameraJson, "model", cam.model, "string", errors);
         OpenTrackIOHelpers::assignField(cameraJson, "serialNumber", cam.serialNumber, "string", errors);
 
-        if (cameraJson.contains("captureRate"))
+        if (cameraJson.contains("captureFrameRate"))
         {
-            cam.captureRate = opentrackiotypes::Rational::parse(cameraJson["captureRate"], errors);
+            cam.captureFrameRate = opentrackiotypes::Rational::parse(cameraJson["captureFrameRate"], errors);
         }
         
         const std::regex pattern{R"(^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$)"};
@@ -161,7 +165,7 @@ namespace opentrackio::opentrackioproperties
             OpenTrackIOHelpers::assignField(lensJson, "firmwareVersion", lens.firmwareVersion, "string", errors);
             OpenTrackIOHelpers::assignField(lensJson, "make", lens.make, "string", errors);
             OpenTrackIOHelpers::assignField(lensJson, "model", lens.model, "string", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "nominalFocalLength", lens.nominalFocalLength, "uint32", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "nominalFocalLength", lens.nominalFocalLength, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "serialNumber", lens.serialNumber, "string", errors);
         }
         
@@ -292,7 +296,8 @@ namespace opentrackio::opentrackioproperties
         }
         
         Protocol pro{};
-        if (!OpenTrackIOHelpers::checkTypeAndSetField(json["name"], pro.name))
+        const auto& proJson = json["protocol"];
+        if (!OpenTrackIOHelpers::checkTypeAndSetField(proJson["name"], pro.name))
         {
             errors.emplace_back("field: protocol isn't of type: string");
             return std::nullopt;
@@ -301,7 +306,7 @@ namespace opentrackio::opentrackioproperties
 
         std::optional<std::string> versionStr;
         const std::regex pattern{R"(^[0-9]+.[0-9]+.[0-9]+$)"};
-        OpenTrackIOHelpers::assignRegexField(json, "version", versionStr, pattern, errors);
+        OpenTrackIOHelpers::assignRegexField(proJson, "version", versionStr, pattern, errors);
         
         if (!versionStr.has_value())
         {
@@ -369,6 +374,25 @@ namespace opentrackio::opentrackioproperties
         
         return SampleId{std::move(str.value())};
     }
+
+    std::optional<StreamId> StreamId::parse(const nlohmann::json &json, std::vector<std::string> &errors)
+    {
+        if (!json.contains("streamId"))
+        {
+            return std::nullopt;
+        }
+
+        std::optional<std::string> str;
+        const std::regex pattern{R"(^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$)"};
+        OpenTrackIOHelpers::assignRegexField(json, "streamId", str, pattern, errors);
+
+        if (!str.has_value())
+        {
+            return std::nullopt;
+        }
+
+        return StreamId{std::move(str.value())};
+    }    
 
     std::optional<Timing> Timing::parse(const nlohmann::json &json, std::vector<std::string>& errors)
     {
@@ -492,10 +516,10 @@ namespace opentrackio::opentrackioproperties
             outSync.offsets = Synchronization::Offsets{};
             OpenTrackIOHelpers::assignField(json["offsets"], "translation", outSync.offsets->translation, "double", errors);
             OpenTrackIOHelpers::assignField(json["offsets"], "rotation", outSync.offsets->rotation, "double", errors);
-            OpenTrackIOHelpers::assignField(json["offsets"], "encoders", outSync.offsets->encoders, "double", errors);
+            OpenTrackIOHelpers::assignField(json["offsets"], "lensEncoders", outSync.offsets->lensEncoders, "double", errors);
 
             if (!outSync.offsets->translation.has_value() && !outSync.offsets->rotation.has_value() &&
-                !outSync.offsets->encoders.has_value())
+                !outSync.offsets->lensEncoders.has_value())
             {
                 outSync.offsets = std::nullopt;
             }

@@ -33,12 +33,10 @@ namespace opentrackio::opentrackioproperties
         std::optional<opentrackiotypes::Dimensions> activeSensorResolution = std::nullopt;
 
         /**
-         * Nominal ratio of height to width of the image of an axis-aligned square
-         * captured by the camera sensor. It can be used to de-squeeze images but is
-         * not however an exact number over the entire captured area due to a lens'
-         * intrinsic analog nature.
-         * Units: 0.01 unit */
-        std::optional<uint32_t> anamorphicSqueeze = std::nullopt;
+         * Nominal ratio of height to width of the image of an axis-aligned square captured by the camera sensor. 
+         * It can be used to de-squeeze images but is not however an exact number over the entire captured area due 
+         * to a lens' intrinsic analog nature. */
+        std::optional<opentrackiotypes::Rational> anamorphicSqueeze = std::nullopt;
 
         /**
          * Non-blank string identifying camera firmware version. */
@@ -63,7 +61,7 @@ namespace opentrackio::opentrackioproperties
         /**
          * Capture frame rate of the camera
          *  Units: Hertz */
-        std::optional<opentrackiotypes::Rational> captureRate = std::nullopt;
+        std::optional<opentrackiotypes::Rational> captureFrameRate = std::nullopt;
 
         /**
          * URN identifying the ASC Framing Decision List used by the camera.
@@ -204,7 +202,7 @@ namespace opentrackio::opentrackioproperties
         /**
          * Nominal focal length of the lens.
          * The number printed on the side of a prime lens, e.g. 50 mm, and undefined in the case of a zoom lens. */
-        std::optional<uint32_t> nominalFocalLength = std::nullopt;
+        std::optional<double> nominalFocalLength = std::nullopt;
      
         /**
          * Shift in X and Y of the centre of perspective projection of the virtual camera
@@ -284,6 +282,17 @@ namespace opentrackio::opentrackioproperties
 
         static std::optional<SampleId> parse(const nlohmann::json& json, std::vector<std::string>& errors);
     };
+    
+    struct StreamId
+    {
+        /**
+         * URN serving as unique identifier of the stream in which data is being transported. 
+         * This is most important in the case where a single device is producing multiple streams of samples.
+         * pattern: ^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ */
+        std::string id;
+
+        static std::optional<StreamId> parse(const nlohmann::json& json, std::vector<std::string>& errors);
+    };
 
     struct Timing
     {
@@ -349,7 +358,7 @@ namespace opentrackio::opentrackioproperties
             {
                 std::optional<double> translation = std::nullopt;
                 std::optional<double> rotation = std::nullopt;
-                std::optional<double> encoders = std::nullopt;
+                std::optional<double> lensEncoders = std::nullopt;
             };
             std::optional<Offsets> offsets = std::nullopt;
             
