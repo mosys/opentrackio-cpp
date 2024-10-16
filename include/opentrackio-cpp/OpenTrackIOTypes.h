@@ -29,7 +29,7 @@ namespace opentrackio::opentrackiotypes
         Rational(int64_t n, int64_t d) : numerator{n}, denominator{d}
         {};
         
-        static std::optional<Rational> parse(nlohmann::json &json, std::vector<std::string> &errors);
+        static std::optional<Rational> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors);
     };
 
     struct Vector3
@@ -43,7 +43,7 @@ namespace opentrackio::opentrackiotypes
         Vector3(double x, double y, double z) : x{x}, y{y}, z{z}
         {};
 
-        static std::optional<Vector3> parse(nlohmann::json &json, std::vector<std::string> &errors);
+        static std::optional<Vector3> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors);
     };
 
     struct Rotation
@@ -57,7 +57,7 @@ namespace opentrackio::opentrackiotypes
         Rotation(double p, double t, double r) : pan{p}, tilt{t}, roll{r}
         {};
 
-        static std::optional<Rotation> parse(nlohmann::json &json, std::vector<std::string> &errors);
+        static std::optional<Rotation> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors);
     };
 
     struct Timecode
@@ -80,7 +80,7 @@ namespace opentrackio::opentrackiotypes
         Timecode(uint8_t h, uint8_t m, uint8_t s, uint8_t f, Format fmt)
                 : hours{h}, minutes{m}, seconds{s}, frames{f}, format{fmt} {};
 
-        static std::optional<Timecode> parse(nlohmann::json &json, std::vector<std::string> &errors);
+        static std::optional<Timecode> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors);
     };
 
     struct Timestamp
@@ -94,7 +94,7 @@ namespace opentrackio::opentrackiotypes
         Timestamp(uint64_t s, uint32_t n, uint32_t a) : seconds{s}, nanoseconds{n}, attoseconds{a}
         {};
 
-        static std::optional<Timestamp> parse(nlohmann::json &json, std::vector<std::string> &errors);
+        static std::optional<Timestamp> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors);
     };
 
     struct Dimensions
@@ -107,7 +107,7 @@ namespace opentrackio::opentrackiotypes
         Dimensions(uint32_t w, uint32_t h) : width{w}, height{h}
         {};
 
-        static std::optional<Dimensions> parse(nlohmann::json &json, std::vector<std::string> &errors);
+        static std::optional<Dimensions> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors);
     };
 
     struct Transform

@@ -186,7 +186,7 @@ namespace opentrackio
             return;
         }
 
-        field = opentrackiotypes::Vector3::parse(json[fieldStr], errors);
+        field = opentrackiotypes::Vector3::parse(json, fieldStr, errors);
         json.erase(fieldStr);
     }
 
@@ -201,7 +201,7 @@ namespace opentrackio
             return;
         }
 
-        field = opentrackiotypes::Rotation::parse(json[fieldStr], errors);
+        field = opentrackiotypes::Rotation::parse(json, fieldStr, errors);
         json.erase(fieldStr);
     }
 

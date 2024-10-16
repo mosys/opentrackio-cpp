@@ -36,19 +36,19 @@ namespace opentrackio::opentrackioproperties
         if (cameraJson.contains("activeSensorPhysicalDimensions"))
         {
             cam.activeSensorPhysicalDimensions = opentrackiotypes::Dimensions::parse(
-                    cameraJson["activeSensorPhysicalDimensions"], errors);
+                    cameraJson, "activeSensorPhysicalDimensions", errors);
             cameraJson.erase("activeSensorPhysicalDimensions");
         }
 
         if (cameraJson.contains("activeSensorResolution"))
         {
-            cam.activeSensorResolution = opentrackiotypes::Dimensions::parse(cameraJson["activeSensorResolution"], errors);
+            cam.activeSensorResolution = opentrackiotypes::Dimensions::parse(cameraJson, "activeSensorResolution", errors);
             cameraJson.erase("activeSensorResolution");
         }
 
         if (cameraJson.contains("anamorphicSqueeze"))
         {
-            cam.anamorphicSqueeze = opentrackiotypes::Rational::parse(cameraJson["anamorphicSqueeze"], errors);
+            cam.anamorphicSqueeze = opentrackiotypes::Rational::parse(cameraJson, "anamorphicSqueeze", errors);
             cameraJson.erase("anamorphicSqueeze");
         }
         
@@ -60,7 +60,7 @@ namespace opentrackio::opentrackioproperties
 
         if (cameraJson.contains("captureFrameRate"))
         {
-            cam.captureFrameRate = opentrackiotypes::Rational::parse(cameraJson["captureFrameRate"], errors);
+            cam.captureFrameRate = opentrackiotypes::Rational::parse(cameraJson, "captureFrameRate", errors);
             cameraJson.erase("captureFrameRate");
         }
         
@@ -153,7 +153,7 @@ namespace opentrackio::opentrackioproperties
             return std::nullopt;
         }
 
-        OpenTrackIOHelpers::clearFieldIfEmpty(json, "globalStage");
+        json.erase("globalStage");
         return gs;
     }
 
@@ -333,7 +333,7 @@ namespace opentrackio::opentrackioproperties
         }
         pro.version = std::move(versionStr.value());
 
-        OpenTrackIOHelpers::clearFieldIfEmpty(json, "protocol");
+        json.erase("protocol");
         return pro;
     }
 
@@ -435,7 +435,7 @@ namespace opentrackio::opentrackioproperties
 
         if (timingJson.contains("frameRate"))
         {
-            timing.frameRate = opentrackiotypes::Rational::parse(timingJson["frameRate"], errors);
+            timing.frameRate = opentrackiotypes::Rational::parse(timingJson, "frameRate", errors);
             timingJson.erase("frameRate");
         }
         
@@ -454,13 +454,13 @@ namespace opentrackio::opentrackioproperties
         
         if (timingJson.contains("recordedTimestamp"))
         {
-            timing.recordedTimestamp = opentrackiotypes::Timestamp::parse(timingJson["recordedTimestamp"], errors);
+            timing.recordedTimestamp = opentrackiotypes::Timestamp::parse(timingJson, "recordedTimestamp", errors);
             timingJson.erase("recordedTimestamp");
         }
 
         if (timingJson.contains("sampleTimestamp"))
         {
-            timing.sampleTimestamp = opentrackiotypes::Timestamp::parse(timingJson["sampleTimestamp"], errors);
+            timing.sampleTimestamp = opentrackiotypes::Timestamp::parse(timingJson, "sampleTimestamp", errors);
             timingJson.erase("sampleTimestamp");
         }
 
@@ -474,7 +474,7 @@ namespace opentrackio::opentrackioproperties
         
         if (timingJson.contains("timecode"))
         {
-            timing.timecode = opentrackiotypes::Timecode::parse(timingJson["timecode"], errors);
+            timing.timecode = opentrackiotypes::Timecode::parse(timingJson, "timecode", errors);
             timingJson.erase("timecode");
         }
 
@@ -495,7 +495,7 @@ namespace opentrackio::opentrackioproperties
             return std::nullopt;
         }
         
-        std::optional<opentrackiotypes::Rational> freq = opentrackiotypes::Rational::parse(json["frequency"], errors);
+        std::optional<opentrackiotypes::Rational> freq = opentrackiotypes::Rational::parse(json, "frequency", errors);
         if (!freq.has_value())
         {
             errors.emplace_back("field: timing/synchronization/frequency is missing required fields");
