@@ -57,6 +57,8 @@ namespace opentrackio
         void parseTrackerToJson(nlohmann::json& baseJson);
         void parseTransformsToJson(nlohmann::json& baseJson);
         
+        void warnForRemainingFields(const nlohmann::json& json);
+        
         std::optional<nlohmann::json> m_json = std::nullopt;
         std::vector<std::string> m_errorMessages{};
         std::vector<std::string> m_warningMessages{};

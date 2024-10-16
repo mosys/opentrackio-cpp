@@ -78,7 +78,7 @@ namespace opentrackio::opentrackioproperties
          * Units: Degree */
         std::optional<uint32_t> shutterAngle = std::nullopt;
 
-        static std::optional<Camera> parse(const nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<Camera> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
 
     /** Duration of the clip.
@@ -87,7 +87,7 @@ namespace opentrackio::opentrackioproperties
     {
         opentrackiotypes::Rational rational{};
         
-        static std::optional<Duration> parse(const nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<Duration> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
 
     /**
@@ -103,7 +103,7 @@ namespace opentrackio::opentrackioproperties
         double lon0;
         double h0;
 
-        static std::optional<GlobalStage> parse(const nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<GlobalStage> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
 
     struct Lens
@@ -245,7 +245,7 @@ namespace opentrackio::opentrackioproperties
         };
         std::optional<Undistortion> undistortion = std::nullopt;
 
-        static std::optional<Lens> parse(const nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<Lens> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
     
     struct Protocol
@@ -258,7 +258,7 @@ namespace opentrackio::opentrackioproperties
          * Pattern: ^[0-9]+.[0-9]+.[0-9]+$ */
         std::string version;
 
-        static std::optional<Protocol> parse(const nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<Protocol> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
 
     struct RelatedSampleIds
@@ -270,7 +270,7 @@ namespace opentrackio::opentrackioproperties
          * Pattern: ^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ */
         std::vector<std::string> samples;
 
-        static std::optional<RelatedSampleIds> parse(const nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<RelatedSampleIds> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
 
     struct SampleId
@@ -280,7 +280,7 @@ namespace opentrackio::opentrackioproperties
          * Pattern: ^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ */
         std::string id;
 
-        static std::optional<SampleId> parse(const nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<SampleId> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
     
     struct StreamId
@@ -291,7 +291,7 @@ namespace opentrackio::opentrackioproperties
          * pattern: ^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ */
         std::string id;
 
-        static std::optional<StreamId> parse(const nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<StreamId> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
 
     struct Timing
@@ -392,10 +392,10 @@ namespace opentrackio::opentrackioproperties
          *                      as e.g. 30000/1001. Note the timecode frame rate may differ from the sample frequency */
         std::optional<opentrackiotypes::Timecode> timecode = std::nullopt;
 
-        static std::optional<Timing> parse(const nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<Timing> parse(nlohmann::json& json, std::vector<std::string>& errors);
         
     private:
-        static std::optional<Synchronization> parseSynchronization(const nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<Synchronization> parseSynchronization(nlohmann::json& json, std::vector<std::string>& errors);
     };
 
     struct Tracker
@@ -432,7 +432,7 @@ namespace opentrackio::opentrackioproperties
          * Non-blank string describing status of tracking system. */
         std::optional<std::string> status = std::nullopt;
 
-        static std::optional<Tracker> parse(const nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<Tracker> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };    
 
     /**
@@ -453,6 +453,6 @@ namespace opentrackio::opentrackioproperties
     {
         std::vector<opentrackiotypes::Transform> transforms{};
 
-        static std::optional<Transforms> parse(const nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<Transforms> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
 } // namespace opentrackio::opentrackioproperties

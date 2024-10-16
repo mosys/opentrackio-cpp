@@ -59,18 +59,29 @@ namespace opentrackio
     
     bool OpenTrackIOSample::initialise(const nlohmann::json &json)
     {
+        // Take a copy of the full JSON for referencing later if needed.
         m_json = json;
-        camera = opentrackioproperties::Camera::parse(json, m_errorMessages);
-        duration = opentrackioproperties::Duration::parse(json, m_errorMessages);
-        globalStage = opentrackioproperties::GlobalStage::parse(json, m_errorMessages);
-        lens = opentrackioproperties::Lens::parse(json, m_errorMessages);
-        protocol = opentrackioproperties::Protocol::parse(json, m_errorMessages);
-        relatedSampleIds = opentrackioproperties::RelatedSampleIds::parse(json, m_errorMessages);
-        sampleId = opentrackioproperties::SampleId::parse(json, m_errorMessages);
-        streamId = opentrackioproperties::StreamId::parse(json, m_errorMessages);
-        timing = opentrackioproperties::Timing::parse(json, m_errorMessages);
-        tracker = opentrackioproperties::Tracker::parse(json, m_errorMessages);
-        transforms = opentrackioproperties::Transforms::parse(json, m_errorMessages);
+        
+        /** 
+         * Take a second copy of the original which will have all processed fields removed (this is to check for
+         * leftover fields. */
+        
+        nlohmann::json jsonCopy = json;
+        camera = opentrackioproperties::Camera::parse(jsonCopy, m_errorMessages);
+        duration = opentrackioproperties::Duration::parse(jsonCopy, m_errorMessages);
+        globalStage = opentrackioproperties::GlobalStage::parse(jsonCopy, m_errorMessages);
+        lens = opentrackioproperties::Lens::parse(jsonCopy, m_errorMessages);
+        protocol = opentrackioproperties::Protocol::parse(jsonCopy, m_errorMessages);
+        relatedSampleIds = opentrackioproperties::RelatedSampleIds::parse(jsonCopy, m_errorMessages);
+        sampleId = opentrackioproperties::SampleId::parse(jsonCopy, m_errorMessages);
+        streamId = opentrackioproperties::StreamId::parse(jsonCopy, m_errorMessages);
+        timing = opentrackioproperties::Timing::parse(jsonCopy, m_errorMessages);
+        tracker = opentrackioproperties::Tracker::parse(jsonCopy, m_errorMessages);
+        transforms = opentrackioproperties::Transforms::parse(jsonCopy, m_errorMessages);
+        
+        // Check the copy to see if it has remaining fields and if so bubble up warnings.
+        warnForRemainingFields(jsonCopy);
+        
         return true;
     }
 
@@ -398,5 +409,26 @@ namespace opentrackio
             
             baseJson["transforms"].push_back(tfJson);
         }
+    }
+
+    void OpenTrackIOSample::warnForRemainingFields(const nlohmann::json &json)
+    {
+        const std::function<void(const nlohmann::json&)> iterateItemsAndWarn = [&](const nlohmann::json& currentRoot){
+            if (!currentRoot.is_object() || std::distance(currentRoot.items().begin(), currentRoot.items().end()) == 0)
+            {
+                return;
+            }
+            
+            for (const auto& [key, val] : currentRoot.items())
+            {
+                if (key != "static")
+                {
+                    m_warningMessages.push_back(std::format("Key: {} was still remaining after parsing.", key));    
+                }
+                iterateItemsAndWarn(val);
+            }
+        };
+        
+        iterateItemsAndWarn(json);
     }
 } // namespace opentrackio
