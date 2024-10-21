@@ -15,7 +15,6 @@ project(opentrackio-cpp VERSION 1.0.0 LANGUAGES CXX)
 set (
         source_list
         
-        src/OpenTrackIOTypes.cpp
         src/OpenTrackIOProperties.cpp
         src/OpenTrackIOSample.cpp
 )

@@ -15,8 +15,6 @@
 #include <format>
 #include <regex>
 #include <nlohmann/json.hpp>
-#include "OpenTrackIOTypes.h"
-
 
 namespace opentrackio
 {
@@ -174,36 +172,6 @@ namespace opentrackio
             }
         }  
     };
-    
-    template<>
-    inline void OpenTrackIOHelpers::assignField<opentrackiotypes::Vector3>(nlohmann::json &json, std::string_view fieldStr,
-                                                       std::optional<opentrackiotypes::Vector3> &field,
-                                                       std::string_view typeStr, std::vector<std::string> &errors)
-    {
-        if (!json.contains(fieldStr))
-        {
-            field = std::nullopt;
-            return;
-        }
-
-        field = opentrackiotypes::Vector3::parse(json, fieldStr, errors);
-        json.erase(fieldStr);
-    }
-
-    template<>
-    inline void OpenTrackIOHelpers::assignField<opentrackiotypes::Rotation>(nlohmann::json &json, std::string_view fieldStr,
-                                                        std::optional<opentrackiotypes::Rotation> &field,
-                                                        std::string_view typeStr, std::vector<std::string> &errors)
-    {
-        if (!json.contains(fieldStr))
-        {
-            field = std::nullopt;
-            return;
-        }
-
-        field = opentrackiotypes::Rotation::parse(json, fieldStr, errors);
-        json.erase(fieldStr);
-    }
 
     template<>
     inline void OpenTrackIOHelpers::assignField<std::vector<double>>(nlohmann::json &json, std::string_view fieldStr,
