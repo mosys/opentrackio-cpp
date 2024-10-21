@@ -156,15 +156,17 @@ namespace opentrackio::opentrackiotypes
         return Timestamp(seconds.value(), nanoseconds.value(), attoseconds.value_or(0));
     }
 
-    std::optional<Dimensions> Dimensions::parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors)
+    template<typename T>
+    requires std::integral<T> || std::floating_point<T>
+    std::optional<Dimensions<T>> Dimensions<T>::parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors)
     {
         auto& dimJson = json[fieldStr];
         
-        std::optional<uint32_t> width = std::nullopt;
-        std::optional<uint32_t> height = std::nullopt;
+        std::optional<T> width = std::nullopt;
+        std::optional<T> height = std::nullopt;
 
-        OpenTrackIOHelpers::assignField(dimJson, "width", width, "uint32_t", errors);
-        OpenTrackIOHelpers::assignField(dimJson, "height", height, "uint32_t", errors);
+        OpenTrackIOHelpers::assignField(dimJson, "width", width, "number", errors);
+        OpenTrackIOHelpers::assignField(dimJson, "height", height, "number", errors);
 
         if (!width.has_value() || !height.has_value())
         {

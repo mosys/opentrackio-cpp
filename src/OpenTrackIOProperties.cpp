@@ -35,14 +35,15 @@ namespace opentrackio::opentrackioproperties
         
         if (cameraJson.contains("activeSensorPhysicalDimensions"))
         {
-            cam.activeSensorPhysicalDimensions = opentrackiotypes::Dimensions::parse(
+            cam.activeSensorPhysicalDimensions = opentrackiotypes::Dimensions<double>::parse(
                     cameraJson, "activeSensorPhysicalDimensions", errors);
             cameraJson.erase("activeSensorPhysicalDimensions");
         }
 
         if (cameraJson.contains("activeSensorResolution"))
         {
-            cam.activeSensorResolution = opentrackiotypes::Dimensions::parse(cameraJson, "activeSensorResolution", errors);
+            cam.activeSensorResolution = opentrackiotypes::Dimensions<uint32_t>::parse(cameraJson,
+                   "activeSensorResolution", errors);
             cameraJson.erase("activeSensorResolution");
         }
 
@@ -68,11 +69,11 @@ namespace opentrackio::opentrackioproperties
         OpenTrackIOHelpers::assignRegexField(cameraJson, "fdlLink", cam.fdlLink, pattern, errors);
         
         OpenTrackIOHelpers::assignField(cameraJson, "isoSpeed", cam.isoSpeed, "integer", errors);
-        OpenTrackIOHelpers::assignField(cameraJson, "shutterAngle", cam.shutterAngle, "integer", errors);
+        OpenTrackIOHelpers::assignField(cameraJson, "shutterAngle", cam.shutterAngle, "double", errors);
         
-        if (cam.shutterAngle.has_value() && cam.shutterAngle.value() > 360000)
+        if (cam.shutterAngle.has_value() && cam.shutterAngle.value() > 360)
         {
-            errors.emplace_back("field: shutterAngle is outside the expected range 1 - 360000.");
+            errors.emplace_back("field: shutterAngle is outside the expected range 1 - 360.");
             cam.shutterAngle = std::nullopt;            
         }
 
@@ -99,7 +100,7 @@ namespace opentrackio::opentrackioproperties
         std::optional<uint32_t> denominator = std::nullopt;
         
         OpenTrackIOHelpers::assignField(durationJson, "num", numerator, "uint32", errors);
-        OpenTrackIOHelpers::assignField(durationJson, "denom", numerator, "uint32", errors);
+        OpenTrackIOHelpers::assignField(durationJson, "denom", denominator, "uint32", errors);
         
         if (!numerator.has_value() || !denominator.has_value())
         {
@@ -211,7 +212,6 @@ namespace opentrackio::opentrackioproperties
             }
 
             OpenTrackIOHelpers::assignField(lensJson, "distortionOverscan", lens.distortionOverscan, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "distortionScale", lens.distortionScale, "double", errors);
 
             if (lensJson.contains("distortionShift"))
             {
@@ -229,21 +229,7 @@ namespace opentrackio::opentrackioproperties
             }
 
             OpenTrackIOHelpers::assignField(lensJson, "encoders", lens.encoders, "double", errors);
-
-            if (lensJson.contains("entrancePupilOffset"))
-            {
-                std::optional<int64_t> numerator = std::nullopt;
-                std::optional<int64_t> denominator = std::nullopt;
-
-                OpenTrackIOHelpers::assignField(lensJson["entrancePupilOffset"], "num", numerator, "int64", errors);
-                OpenTrackIOHelpers::assignField(lensJson["entrancePupilOffset"], "denom", denominator, "int64", errors);
-
-                if (numerator.has_value() && denominator.has_value())
-                {
-                    lens.entrancePupilOffset = {numerator.value(), denominator.value()};
-                }
-                lensJson.erase("entrancePupilOffset");
-            }
+            OpenTrackIOHelpers::assignField(lensJson, "entrancePupilOffset", lens.entrancePupilOffset, "double", errors);
 
             if (lensJson.contains("exposureFalloff"))
             {
@@ -262,9 +248,9 @@ namespace opentrackio::opentrackioproperties
                 lensJson.erase("exposureFalloff");
             }
 
-            OpenTrackIOHelpers::assignField(lensJson, "fStop", lens.fStop, "uint32", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "fStop", lens.fStop, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "focalLength", lens.focalLength, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "focusDistance", lens.focusDistance, "uint32", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "focusDistance", lens.focusDistance, "double", errors);
 
             if (lensJson.contains("perspectiveShift"))
             {
@@ -282,7 +268,7 @@ namespace opentrackio::opentrackioproperties
             }
 
             OpenTrackIOHelpers::assignField(lensJson, "rawEncoders", lens.rawEncoders, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "tStop", lens.tStop, "uint32", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "tStop", lens.tStop, "double", errors);
 
             if (lensJson.contains("undistortion"))
             {
