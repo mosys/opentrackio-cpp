@@ -14,23 +14,25 @@
 #pragma once
 #include <optional>
 #include <span>
-#include "../external/json/json.hpp"
+#include <nlohmann/json.hpp>
 #include "OpenTrackIOProperties.h"
 
 namespace opentrackio
 {
-    #define OPEN_TRACK_IO_PROTOCOL "OpenTrackIO_0.1.0"
+    #define OPEN_TRACK_IO_PROTOCOL_NAME "OpenTrackIO"
+    #define OPEN_TRACK_IO_PROTOCOL_VERSION "1.0.0"
     struct OpenTrackIOSample
     {
         std::optional<opentrackioproperties::Camera> camera = std::nullopt;
-        std::optional<opentrackioproperties::Device> device = std::nullopt;
         std::optional<opentrackioproperties::Duration> duration = std::nullopt;
         std::optional<opentrackioproperties::GlobalStage> globalStage = std::nullopt;
         std::optional<opentrackioproperties::Lens> lens = std::nullopt;
         std::optional<opentrackioproperties::Protocol> protocol = std::nullopt;
-        std::optional<opentrackioproperties::RelatedSamples> relatedSamples = std::nullopt;
+        std::optional<opentrackioproperties::RelatedSampleIds> relatedSampleIds = std::nullopt;
         std::optional<opentrackioproperties::SampleId> sampleId = std::nullopt;
+        std::optional<opentrackioproperties::StreamId> streamId = std::nullopt;
         std::optional<opentrackioproperties::Timing> timing = std::nullopt;
+        std::optional<opentrackioproperties::Tracker> tracker = std::nullopt;
         std::optional<opentrackioproperties::Transforms> transforms = std::nullopt;
 
         OpenTrackIOSample() = default;
@@ -44,11 +46,18 @@ namespace opentrackio
     private:
         void generateJson();
         void parseCameraToJson(nlohmann::json& baseJson);
-        void parseDeviceToJson(nlohmann::json& baseJson);
-        void parseLensToJson(nlohmann::json& baseJson);
+        void parseDurationToJson(nlohmann::json& baseJson);
         void parseGlobalStageToJson(nlohmann::json& baseJson);
+        void parseLensToJson(nlohmann::json& baseJson);
+        void parseProtocolToJson(nlohmann::json& baseJson);
+        void parseRelatedSampleIdsToJson(nlohmann::json& baseJson);
+        void parseSampleIdToJson(nlohmann::json& baseJson);
+        void parseStreamIdToJson(nlohmann::json& baseJson);
         void parseTimingToJson(nlohmann::json& baseJson);
+        void parseTrackerToJson(nlohmann::json& baseJson);
         void parseTransformsToJson(nlohmann::json& baseJson);
+        
+        void warnForRemainingFields(const nlohmann::json& json);
         
         std::optional<nlohmann::json> m_json = std::nullopt;
         std::vector<std::string> m_errorMessages{};

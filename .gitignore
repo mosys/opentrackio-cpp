@@ -17,3 +17,6 @@ install/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+
+# Conan related
+CMakeUserPresets.json
