@@ -14,9 +14,7 @@
 #pragma once
 #include <format>
 #include <regex>
-#include "../external/json/json.hpp"
-#include "OpenTrackIOTypes.h"
-
+#include <nlohmann/json.hpp>
 
 namespace opentrackio
 {
@@ -38,6 +36,14 @@ namespace opentrackio
     class OpenTrackIOHelpers
     {
     public:
+        static inline void clearFieldIfEmpty(nlohmann::json &json, std::string_view fieldStr)
+        {
+            if (json[fieldStr].is_object() && std::distance(json[fieldStr].items().begin(), json[fieldStr].items().end()) == 0)
+            {
+                json.erase(fieldStr);
+            }
+        }
+        
         template<typename T>
         static inline bool checkTypeAndSetField(const nlohmann::json &jsonVal, T &field)
         {
@@ -105,7 +111,7 @@ namespace opentrackio
         }
 
         template<typename T>
-        static inline void assignField(const nlohmann::json &json, std::string_view fieldStr, std::optional<T> &field,
+        static inline void assignField(nlohmann::json &json, std::string_view fieldStr, std::optional<T> &field,
                          std::string_view typeStr, std::vector<std::string> &errors)
         {
             if (json.contains(fieldStr))
@@ -116,11 +122,12 @@ namespace opentrackio
                     field = std::nullopt;
                     return;
                 }
+                json.erase(fieldStr);
             }
         }
         
         template<Encoder T>
-        static inline void assignField(const nlohmann::json &json, std::string_view fieldStr, std::optional<T> &field,
+        static inline void assignField(nlohmann::json &json, std::string_view fieldStr, std::optional<T> &field,
                          std::string_view typeStr, std::vector<std::string> &errors)
         {
             if (!json.contains(fieldStr))
@@ -130,7 +137,7 @@ namespace opentrackio
             }
 
             field = T{};
-            const auto &encoderJson = json[fieldStr];
+            auto &encoderJson = json[fieldStr];
             assignField(encoderJson, "focus", field->focus, typeStr, errors);
             assignField(encoderJson, "iris", field->iris, typeStr, errors);
             assignField(encoderJson, "zoom", field->zoom, typeStr, errors);
@@ -140,9 +147,11 @@ namespace opentrackio
                 field = std::nullopt;
                 return;
             }
+
+            json.erase(fieldStr);
         }
 
-        static inline void assignRegexField(const nlohmann::json &json, std::string_view fieldStr, std::optional<std::string> &field,
+        static inline void assignRegexField(nlohmann::json &json, std::string_view fieldStr, std::optional<std::string> &field,
                               const std::regex &pattern, std::vector<std::string> &errors)
         {
             if (json.contains(fieldStr))
@@ -159,41 +168,13 @@ namespace opentrackio
                     field = std::nullopt;
                     return;
                 }
+                json.erase(fieldStr);
             }
         }  
     };
-    
-    // TODO: Vector3 and Rotation definitions might be combinable in a single template with concepts but I couldn't figure it out.
-    template<>
-    inline void OpenTrackIOHelpers::assignField<opentrackiotypes::Vector3>(const nlohmann::json &json, std::string_view fieldStr,
-                                                       std::optional<opentrackiotypes::Vector3> &field,
-                                                       std::string_view typeStr, std::vector<std::string> &errors)
-    {
-        if (!json.contains(fieldStr))
-        {
-            field = std::nullopt;
-            return;
-        }
-
-        field = opentrackiotypes::Vector3::parse(json[fieldStr], errors);
-    }
 
     template<>
-    inline void OpenTrackIOHelpers::assignField<opentrackiotypes::Rotation>(const nlohmann::json &json, std::string_view fieldStr,
-                                                        std::optional<opentrackiotypes::Rotation> &field,
-                                                        std::string_view typeStr, std::vector<std::string> &errors)
-    {
-        if (!json.contains(fieldStr))
-        {
-            field = std::nullopt;
-            return;
-        }
-
-        field = opentrackiotypes::Rotation::parse(json[fieldStr], errors);
-    }
-
-    template<>
-    inline void OpenTrackIOHelpers::assignField<std::vector<double>>(const nlohmann::json &json, std::string_view fieldStr,
+    inline void OpenTrackIOHelpers::assignField<std::vector<double>>(nlohmann::json &json, std::string_view fieldStr,
                                                  std::optional<std::vector<double>> &field,
                                                  std::string_view typeStr, std::vector<std::string> &errors)
     {
@@ -212,5 +193,6 @@ namespace opentrackio
         }
 
         field = std::move(vec);
+        json.erase(fieldStr);
     }
 } // namespace opentrackio
