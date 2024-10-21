@@ -25,12 +25,12 @@ namespace opentrackio::opentrackioproperties
         /**
          *  Active area of the camera sensor.
          *  Units: Microns */
-        std::optional<opentrackiotypes::Dimensions> activeSensorPhysicalDimensions = std::nullopt;
+        std::optional<opentrackiotypes::Dimensions<double>> activeSensorPhysicalDimensions = std::nullopt;
 
         /**
          * Photosite resolution of the active area of the camera sensor.
          *  Units: Pixels */
-        std::optional<opentrackiotypes::Dimensions> activeSensorResolution = std::nullopt;
+        std::optional<opentrackiotypes::Dimensions<uint32_t>> activeSensorResolution = std::nullopt;
 
         /**
          * Nominal ratio of height to width of the image of an axis-aligned square captured by the camera sensor. 
@@ -76,7 +76,7 @@ namespace opentrackio::opentrackioproperties
          * Shutter speed as a fraction of the captured frame rate. The shutter speed (in units of 1/s)
          * is equal to the value of the parameter divided by 360 times the capture frame rate.
          * Units: Degree */
-        std::optional<uint32_t> shutterAngle = std::nullopt;
+        std::optional<double> shutterAngle = std::nullopt;
 
         static std::optional<Camera> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
@@ -129,10 +129,6 @@ namespace opentrackio::opentrackioproperties
         std::optional<double> distortionOverscan = std::nullopt;
 
         /**
-         * Scaling factor on field-of-view for tweaking lens calibrations */
-        std::optional<double> distortionScale = std::nullopt;
-
-        /**
          * Shift in X and Y of the centre of distortion of the virtual camera
          * Units: millimeters */
         struct DistortionShift
@@ -161,7 +157,7 @@ namespace opentrackio::opentrackioproperties
         /**
          * Offset of the entrance pupil relative to the nominal imaging plane (positive if the entrance pupil is 
          * located on the side of the nominal imaging plane that is towards the object, and negative otherwise) */
-        std::optional<opentrackiotypes::Rational> entrancePupilOffset = std::nullopt;
+        std::optional<double> entrancePupilOffset = std::nullopt;
 
         /**
          * Coefficients for calculating the exposure fall-off (vignetting) of a lens. */
@@ -175,7 +171,7 @@ namespace opentrackio::opentrackioproperties
 
         /**
          * The linear f-number of the lens, equal to the focal length divided by the diameter of the entrance pupil. */
-        std::optional<uint32_t> fStop = std::nullopt;
+        std::optional<double> fStop = std::nullopt;
      
         /**
          * Non-blank string identifying lens firmware version. */
@@ -189,7 +185,7 @@ namespace opentrackio::opentrackioproperties
         /**
          * Focus distance / position of the lens
          * Units: millimeter */
-        std::optional<uint32_t> focusDistance = std::nullopt;
+        std::optional<double> focusDistance = std::nullopt;
 
         /**
          * Non-blank string naming lens manufacturer. */
@@ -231,9 +227,8 @@ namespace opentrackio::opentrackioproperties
         
         /**
          * The linear t-number of the lens, equal to the F-number of the lens divided by the square root of the
-         * transmittance of the lens.
-         * Units: 0.001 unit */
-        std::optional<uint32_t> tStop = std::nullopt;
+         * transmittance of the lens. */
+        std::optional<double> tStop = std::nullopt;
 
         /**
          * Coefficients for calculating the undistortion characteristics of a lens comprising radial distortion

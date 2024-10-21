@@ -26,8 +26,8 @@ namespace opentrackio
         }
     };
 
-    template<>
-    void assignJson(nlohmann::json &json, std::string_view field, const std::optional<opentrackiotypes::Dimensions> &value)
+    template<typename T>
+    void assignJson(nlohmann::json &json, std::string_view field, const std::optional<opentrackiotypes::Dimensions<T>> &value)
     {
         if (value.has_value())
         {
@@ -201,7 +201,6 @@ namespace opentrackio
         }
 
         assignJson(baseJson["lens"], "distortionOverscan", lens->distortionOverscan);
-        assignJson(baseJson["lens"], "distortionScale", lens->distortionScale);
 
         if (lens->distortionShift.has_value())
         {
@@ -216,12 +215,8 @@ namespace opentrackio
             assignJson(baseJson["lens"]["encoders"], "zoom", lens->encoders->zoom);
         }
 
-        if (lens->entrancePupilOffset.has_value())
-        {
-            baseJson["lens"]["entrancePupilOffset"]["num"] = lens->entrancePupilOffset->numerator;
-            baseJson["lens"]["entrancePupilOffset"]["denom"] = lens->entrancePupilOffset->denominator;
-        }
-
+        assignJson(baseJson["lens"], "entrancePupilOffset", lens->entrancePupilOffset);
+        
         if (lens->exposureFalloff.has_value())
         {
             baseJson["lens"]["exposureFalloff"]["a1"] = lens->exposureFalloff->a1;

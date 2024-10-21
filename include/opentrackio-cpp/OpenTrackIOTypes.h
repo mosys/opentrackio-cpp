@@ -97,17 +97,19 @@ namespace opentrackio::opentrackiotypes
         static std::optional<Timestamp> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors);
     };
 
+    template<typename T>
+    requires std::integral<T> || std::floating_point<T>
     struct Dimensions
     {
-        uint32_t width = 0;
-        uint32_t height = 0;
+        T width = 0;
+        T height = 0;
 
         Dimensions() = default;
 
-        Dimensions(uint32_t w, uint32_t h) : width{w}, height{h}
+        Dimensions(T w, T h) : width{w}, height{h}
         {};
 
-        static std::optional<Dimensions> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors);
+        static std::optional<Dimensions<T>> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors);
     };
 
     struct Transform
