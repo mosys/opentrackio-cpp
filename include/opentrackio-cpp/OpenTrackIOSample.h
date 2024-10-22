@@ -30,7 +30,8 @@ namespace opentrackio
         std::optional<opentrackioproperties::Protocol> protocol = std::nullopt;
         std::optional<opentrackioproperties::RelatedSampleIds> relatedSampleIds = std::nullopt;
         std::optional<opentrackioproperties::SampleId> sampleId = std::nullopt;
-        std::optional<opentrackioproperties::StreamId> streamId = std::nullopt;
+        std::optional<opentrackioproperties::SourceId> sourceId = std::nullopt;
+        std::optional<opentrackioproperties::SourceNumber> sourceNumber = std::nullopt;
         std::optional<opentrackioproperties::Timing> timing = std::nullopt;
         std::optional<opentrackioproperties::Tracker> tracker = std::nullopt;
         std::optional<opentrackioproperties::Transforms> transforms = std::nullopt;
@@ -52,7 +53,8 @@ namespace opentrackio
         void parseProtocolToJson(nlohmann::json& baseJson);
         void parseRelatedSampleIdsToJson(nlohmann::json& baseJson);
         void parseSampleIdToJson(nlohmann::json& baseJson);
-        void parseStreamIdToJson(nlohmann::json& baseJson);
+        void parseSourceIdToJson(nlohmann::json& baseJson);
+        void parseSourceNumberToJson(nlohmann::json& baseJson);
         void parseTimingToJson(nlohmann::json& baseJson);
         void parseTrackerToJson(nlohmann::json& baseJson);
         void parseTransformsToJson(nlohmann::json& baseJson);

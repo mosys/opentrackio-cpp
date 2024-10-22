@@ -383,24 +383,43 @@ namespace opentrackio::opentrackioproperties
         return SampleId{std::move(str.value())};
     }
 
-    std::optional<StreamId> StreamId::parse(nlohmann::json &json, std::vector<std::string> &errors)
+    std::optional<SourceId> SourceId::parse(nlohmann::json &json, std::vector<std::string> &errors)
     {
-        if (!json.contains("streamId"))
+        if (!json.contains("sourceId"))
         {
             return std::nullopt;
         }
 
         std::optional<std::string> str;
         const std::regex pattern{R"(^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$)"};
-        OpenTrackIOHelpers::assignRegexField(json, "streamId", str, pattern, errors);
+        OpenTrackIOHelpers::assignRegexField(json, "sourceId", str, pattern, errors);
 
         if (!str.has_value())
         {
             return std::nullopt;
         }
 
-        json.erase("streamId");
-        return StreamId{std::move(str.value())};
+        json.erase("sourceId");
+        return SourceId{std::move(str.value())};
+    }
+
+    std::optional<SourceNumber> SourceNumber::parse(nlohmann::json &json, std::vector<std::string> &errors)
+    {
+        if (!json.contains("sourceNumber"))
+        {
+            return std::nullopt;
+        }
+
+        std::optional<uint32_t> val;
+        OpenTrackIOHelpers::assignField(json, "sourceNumber", val, "integer", errors);
+
+        if (!val.has_value())
+        {
+            return std::nullopt;
+        }
+
+        json.erase("sourceNumber");
+        return SourceNumber{val.value()};
     }    
 
     std::optional<Timing> Timing::parse(nlohmann::json &json, std::vector<std::string>& errors)
