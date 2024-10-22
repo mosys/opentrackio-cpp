@@ -266,7 +266,6 @@ namespace opentrackio::opentrackioproperties
                 }
                 lensJson.erase("perspectiveShift");
             }
-
             OpenTrackIOHelpers::assignField(lensJson, "rawEncoders", lens.rawEncoders, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "tStop", lens.tStop, "double", errors);
 
@@ -382,7 +381,7 @@ namespace opentrackio::opentrackioproperties
         json.erase("sampleId");
         return SampleId{std::move(str.value())};
     }
-
+  
     std::optional<SourceId> SourceId::parse(nlohmann::json &json, std::vector<std::string> &errors)
     {
         if (!json.contains("sourceId"))
