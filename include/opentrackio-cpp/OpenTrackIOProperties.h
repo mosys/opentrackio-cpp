@@ -278,16 +278,25 @@ namespace opentrackio::opentrackioproperties
         static std::optional<SampleId> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
     
-    struct StreamId
+    struct SourceId
     {
         /**
-         * URN serving as unique identifier of the stream in which data is being transported. 
-         * This is most important in the case where a single device is producing multiple streams of samples.
+         * URN serving as unique identifier of the source from which data is being transported.
          * pattern: ^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ */
         std::string id;
 
-        static std::optional<StreamId> parse(nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<SourceId> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
+
+    struct SourceNumber
+    {
+        /**
+	     * Number that identifies the index of the stream from a source from which data is being transported. 
+         * This is most important in the case where a source is producing multiple streams of samples. */
+        uint32_t value;
+
+        static std::optional<SourceNumber> parse(nlohmann::json& json, std::vector<std::string>& errors);
+    };    
 
     struct Timing
     {
