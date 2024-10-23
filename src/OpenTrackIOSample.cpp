@@ -74,7 +74,8 @@ namespace opentrackio
         protocol = opentrackioproperties::Protocol::parse(jsonCopy, m_errorMessages);
         relatedSampleIds = opentrackioproperties::RelatedSampleIds::parse(jsonCopy, m_errorMessages);
         sampleId = opentrackioproperties::SampleId::parse(jsonCopy, m_errorMessages);
-        streamId = opentrackioproperties::StreamId::parse(jsonCopy, m_errorMessages);
+        sourceId = opentrackioproperties::SourceId::parse(jsonCopy, m_errorMessages);
+        sourceNumber = opentrackioproperties::SourceNumber::parse(jsonCopy, m_errorMessages);
         timing = opentrackioproperties::Timing::parse(jsonCopy, m_errorMessages);
         tracker = opentrackioproperties::Tracker::parse(jsonCopy, m_errorMessages);
         transforms = opentrackioproperties::Transforms::parse(jsonCopy, m_errorMessages);
@@ -120,7 +121,8 @@ namespace opentrackio
         parseProtocolToJson(j);
         parseRelatedSampleIdsToJson(j);
         parseSampleIdToJson(j);
-        parseStreamIdToJson(j);
+        parseSourceIdToJson(j);
+        parseSourceNumberToJson(j);
         parseTimingToJson(j);
         parseTrackerToJson(j);
         parseTransformsToJson(j);
@@ -281,14 +283,24 @@ namespace opentrackio
         baseJson["sampleId"] = sampleId->id;
     }
 
-    void OpenTrackIOSample::parseStreamIdToJson(nlohmann::json &baseJson)
+    void OpenTrackIOSample::parseSourceIdToJson(nlohmann::json &baseJson)
     {
-        if (!streamId.has_value())
+        if (!sourceId.has_value())
         {
             return;
         }
 
-        baseJson["streamId"] = streamId->id;
+        baseJson["sourceId"] = sourceId->id;
+    }
+
+    void OpenTrackIOSample::parseSourceNumberToJson(nlohmann::json &baseJson)
+    {
+        if (!sourceNumber.has_value())
+        {
+            return;
+        }
+
+        baseJson["sourceNumber"] = sourceNumber->value;
     }    
 
     void OpenTrackIOSample::parseTimingToJson(nlohmann::json& baseJson)
