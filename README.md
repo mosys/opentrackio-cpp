@@ -1,9 +1,3 @@
-# NOTE:
-This repo is currently a work in progress and expected to be finalised by the 24/10/2024 to coincide with the full
-OpenTrackIO release.
-
-Items in this repo are subject to vast changes up until then.
-
 # opentrackio-cpp
 
 `opentrackio-cpp` is a small library with the intention to help handle parsing the JSON
@@ -16,9 +10,12 @@ structured for use within your C++ code.
 ### Usage:
 
 #### Conan:
-// TODO
 
-#### Cmake:
+If your project uses Conan2 you can fetch this as a dependency from [Conan Center](https://conan.io/center/recipes/opentrackio-cpp).
+
+Follow the instructions on the page to add this as a dependency to your project.
+
+#### CMake:
 
 If your project is already using Cmake you can download a build for the desired platform from the 
 [Releases Page](https://github.com/mosys/opentrackio-cpp/releases) import the library into your project via `find_package`.
