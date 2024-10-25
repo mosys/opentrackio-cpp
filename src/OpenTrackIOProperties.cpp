@@ -176,6 +176,7 @@ namespace opentrackio::opentrackioproperties
             OpenTrackIOHelpers::assignField(lensJson, "model", lens.model, "string", errors);
             OpenTrackIOHelpers::assignField(lensJson, "nominalFocalLength", lens.nominalFocalLength, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "serialNumber", lens.serialNumber, "string", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "distortionOverscanMax", lens.distortionOverscanMax, "double", errors);
 
             OpenTrackIOHelpers::clearFieldIfEmpty(json["static"], "lens");
         }
@@ -266,6 +267,7 @@ namespace opentrackio::opentrackioproperties
                 }
                 lensJson.erase("perspectiveShift");
             }
+
             OpenTrackIOHelpers::assignField(lensJson, "rawEncoders", lens.rawEncoders, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "tStop", lens.tStop, "double", errors);
 
@@ -382,6 +384,45 @@ namespace opentrackio::opentrackioproperties
         return SampleId{std::move(str.value())};
     }
   
+    std::optional<SourceId> SourceId::parse(nlohmann::json &json, std::vector<std::string> &errors)
+    {
+        if (!json.contains("sourceId"))
+        {
+            return std::nullopt;
+        }
+
+        std::optional<std::string> str;
+        const std::regex pattern{R"(^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$)"};
+        OpenTrackIOHelpers::assignRegexField(json, "sourceId", str, pattern, errors);
+
+        if (!str.has_value())
+        {
+            return std::nullopt;
+        }
+
+        json.erase("sourceId");
+        return SourceId{std::move(str.value())};
+    }
+
+    std::optional<SourceNumber> SourceNumber::parse(nlohmann::json &json, std::vector<std::string> &errors)
+    {
+        if (!json.contains("sourceNumber"))
+        {
+            return std::nullopt;
+        }
+
+        std::optional<uint32_t> val;
+        OpenTrackIOHelpers::assignField(json, "sourceNumber", val, "integer", errors);
+
+        if (!val.has_value())
+        {
+            return std::nullopt;
+        }
+
+        json.erase("sourceNumber");
+        return SourceNumber{val.value()};
+    }    
+
     std::optional<SourceId> SourceId::parse(nlohmann::json &json, std::vector<std::string> &errors)
     {
         if (!json.contains("sourceId"))

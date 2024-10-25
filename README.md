@@ -16,9 +16,12 @@ structured for use within your C++ code.
 ### Usage:
 
 #### Conan:
-// TODO
 
-#### Cmake:
+If your project uses Conan2 you can fetch this as a dependency from [Conan Center](https://conan.io/center/recipes/opentrackio-cpp).
+
+Follow the instructions on the page to add this as a dependency to your project.
+
+#### CMake:
 
 If your project is already using Cmake you can download a build for the desired platform from the 
 [Releases Page](https://github.com/mosys/opentrackio-cpp/releases) import the library into your project via `find_package`.
