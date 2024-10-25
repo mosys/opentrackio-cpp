@@ -129,6 +129,10 @@ namespace opentrackio::opentrackioproperties
         std::optional<double> distortionOverscan = std::nullopt;
 
         /**
+         * Static maximum overscan factor on lens distortion. */
+        std::optional<double> distortionOverscanMax = std::nullopt;
+
+        /**
          * Shift in X and Y of the centre of distortion of the virtual camera
          * Units: millimeters */
         struct DistortionShift

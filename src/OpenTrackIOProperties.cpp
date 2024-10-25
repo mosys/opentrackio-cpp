@@ -176,6 +176,7 @@ namespace opentrackio::opentrackioproperties
             OpenTrackIOHelpers::assignField(lensJson, "model", lens.model, "string", errors);
             OpenTrackIOHelpers::assignField(lensJson, "nominalFocalLength", lens.nominalFocalLength, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "serialNumber", lens.serialNumber, "string", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "distortionOverscanMax", lens.distortionOverscanMax, "double", errors);
 
             OpenTrackIOHelpers::clearFieldIfEmpty(json["static"], "lens");
         }
