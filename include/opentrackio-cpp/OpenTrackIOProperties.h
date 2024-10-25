@@ -300,7 +300,7 @@ namespace opentrackio::opentrackioproperties
         uint32_t value;
 
         static std::optional<SourceNumber> parse(nlohmann::json& json, std::vector<std::string>& errors);
-    };    
+    };
 
     struct Timing
     {
