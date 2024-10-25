@@ -1,3 +1,9 @@
+# NOTE:
+This repo is currently a work in progress and expected to be finalised by the 24/10/2024 to coincide with the full
+OpenTrackIO release.
+
+Items in this repo are subject to vast changes up until then.
+
 # opentrackio-cpp
 
 `opentrackio-cpp` is a small library with the intention to help handle parsing the JSON

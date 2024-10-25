@@ -193,7 +193,6 @@ namespace opentrackio
         assignJson(baseJson["static"]["lens"], "serialNumber", lens->serialNumber);
         assignJson(baseJson["static"]["lens"], "distortionOverscanMax", lens->distortionOverscanMax);
 
-
         // ------- Standard Fields
         assignJson(baseJson["lens"], "custom", lens->custom);
         
