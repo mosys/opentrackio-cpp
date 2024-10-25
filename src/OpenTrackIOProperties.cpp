@@ -383,7 +383,7 @@ namespace opentrackio::opentrackioproperties
         json.erase("sampleId");
         return SampleId{std::move(str.value())};
     }
-
+  
     std::optional<SourceId> SourceId::parse(nlohmann::json &json, std::vector<std::string> &errors)
     {
         if (!json.contains("sourceId"))
@@ -421,7 +421,7 @@ namespace opentrackio::opentrackioproperties
 
         json.erase("sourceNumber");
         return SourceNumber{val.value()};
-    }    
+    }
 
     std::optional<Timing> Timing::parse(nlohmann::json &json, std::vector<std::string>& errors)
     {
