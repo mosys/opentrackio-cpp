@@ -11,17 +11,35 @@
 
 cmake_minimum_required(VERSION 3.15.7)
 project(opentrackio-cpp-tests VERSION 0.9.0 LANGUAGES CXX)
-
 Include(FetchContent)
 
+# Catch 2 test framework
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
   GIT_TAG        v3.4.0 # or a later release
 )
-
 FetchContent_MakeAvailable(Catch2)
 
+# OpenSSL - for Curl
+FetchContent_Declare(
+    ssl_content
+    URL "https://github.com/janbar/openssl-cmake/archive/refs/tags/1.1.1w-20231130.tar.gz"
+    OVERRIDE_FIND_PACKAGE
+)
+FetchContent_MakeAvailable(ssl_content)
+
+# Curl - to get the latest examples from OpenTrackIO.org
+FetchContent_Declare(
+        curl
+        URL "https://github.com/curl/curl/archive/refs/tags/curl-8_7_1.tar.gz"
+        OVERRIDE_FIND_PACKAGE
+)
+set(CURL_USE_OPENSSL ON CACHE INTERNAL "Use OpenSSL backend" FORCE)
+option(CMAKE_USE_SCHANNEL "Set to ON to use WINSSL for windows." ON)
+FetchContent_MakeAvailable(curl)
+
+# Json
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake")
 find_package(nlohmann_json REQUIRED)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -31,15 +49,39 @@ else()
 endif()
 find_package(opentrackio-cpp REQUIRED PATHS "${CMAKE_CURRENT_LIST_DIR}/../install/cmake")
 
+# Compile
 add_executable(tests test.cpp)
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+target_compile_features(tests PUBLIC cxx_std_20)
+target_include_directories(tests
+    PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../install/include"
+        "${CMAKE_CURRENT_LIST_DIR}/../external"
+)
 
+# Linkage
+target_link_libraries(tests
+    PRIVATE
+        Catch2::Catch2WithMain
+        ssl
+        crypto
+        CURL::libcurl_static
+)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_link_libraries(tests PRIVATE opentrackio-cppd.lib)
+    # Post-build copy debug dlls
+    add_custom_command(TARGET tests
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_CURRENT_LIST_DIR}/build/_deps/curl-build/lib/Debug/libcurl-d.dll"
+            "${CMAKE_CURRENT_LIST_DIR}/build/Debug/"
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_CURRENT_LIST_DIR}/build/_deps/catch2-build/src/Debug/Catch2d.dll"
+            "${CMAKE_CURRENT_LIST_DIR}/build/Debug/"
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_CURRENT_LIST_DIR}/build/_deps/catch2-build/src/Debug/Catch2Maind.dll"
+            "${CMAKE_CURRENT_LIST_DIR}/build/Debug/"
+    )
 else()
     target_link_libraries(tests PRIVATE opentrackio-cpp.lib)
 endif()
-target_include_directories(tests PRIVATE
-    "${CMAKE_CURRENT_LIST_DIR}/../install/include"
-    "${CMAKE_CURRENT_LIST_DIR}/../external")
-target_compile_features(tests PUBLIC cxx_std_20)
+

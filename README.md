@@ -58,7 +58,8 @@ Run the `install.bat/sh` (depending on OS) to install the library to the system 
 
 ## Tests:
 
-To build and run the tests run `cmake -DCMAKE_BUILD_TYPE=<Debug/Release> ..` in `./tests/build`.
+Pre-requistites OpenSSL. For Windows install from [here](https://slproweb.com/products/Win32OpenSSL.html)
+To build and run the tests run `cmake -DCMAKE_BUILD_TYPE=<Debug/Release> -DOPENSSL_ROOT_DIR="<path to openssl root>" ..` in `./tests/build`.
 
 ## Licence
 
