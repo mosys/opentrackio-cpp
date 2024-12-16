@@ -4,7 +4,8 @@ find_path(NLOHMANN_JSON_INCLUDE_DIR
         NAMES
         nlohmann/json.hpp
         PATHS
-        "${CMAKE_CURRENT_SOURCE_DIR}/external")
+        "${CMAKE_CURRENT_SOURCE_DIR}/external"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../external")
 mark_as_advanced(NLOHMANN_JSON_INCLUDE_DIR)
 
 find_package_handle_standard_args(nlohmann_json

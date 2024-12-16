@@ -56,6 +56,10 @@ Run the `install.bat/sh` (depending on OS) to install the library to the system 
 `find_package` without needing to set `opentrackio-cpp_DIR` in your Cmake or adding the path to the library to your
 `CMAKE_PREFIX_PATH`.
 
+## Tests:
+
+To build and run the tests run `cmake -DCMAKE_BUILD_TYPE=<Debug/Release> ..` in `./tests/build`.
+
 ## Licence
 
 The MIT License (MIT)
