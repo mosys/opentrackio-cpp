@@ -95,7 +95,49 @@ TEST_CASE("OpenTrackIOSample example initialisation", "[init]")
     REQUIRE(sample.initialise(example));
     REQUIRE(sample.getJson() == stringSample.getJson());
     REQUIRE(sample.getJson() == example);
+    
+    REQUIRE(sample.lens->distortion->radial == std::vector<double>{1.0, 2.0, 3.0});
+    REQUIRE(sample.lens->distortion->tangential == std::vector<double>{1.0, 2.0});
+    REQUIRE(sample.lens->encoders->focus == 0.1);
+    REQUIRE(sample.lens->encoders->iris == 0.2);
+    REQUIRE(sample.lens->encoders->zoom == 0.3);
+    REQUIRE(sample.lens->entrancePupilOffset == 0.123);
+    REQUIRE(sample.lens->fStop == 4.0);
+    REQUIRE(sample.lens->focalLength == 24.305);
+    REQUIRE(sample.lens->focusDistance == 1000);
+    REQUIRE(sample.lens->perspectiveShift->x == 0.1);
+    REQUIRE(sample.lens->perspectiveShift->y == 0.2);
+
     REQUIRE(sample.protocol->name == OPEN_TRACK_IO_PROTOCOL_NAME);
     REQUIRE(sample.protocol->version == OPEN_TRACK_IO_PROTOCOL_VERSION);
-    
+
+    REQUIRE(sample.sampleId->id.substr(0, 9) == "urn:uuid:");
+    REQUIRE(sample.sourceId->id.substr(0, 9) == "urn:uuid:");
+    REQUIRE(sample.sourceNumber->value == 1);
+
+    REQUIRE(sample.timing->frameRate->numerator == 24000);
+    REQUIRE(sample.timing->frameRate->denominator == 1001);
+    REQUIRE(sample.timing->mode == opentrackio::opentrackioproperties::Timing::Mode::EXTERNAL);
+    REQUIRE(sample.timing->timecode->hours == 1);
+    REQUIRE(sample.timing->timecode->minutes == 2);
+    REQUIRE(sample.timing->timecode->seconds == 3);
+    REQUIRE(sample.timing->timecode->frames == 4);
+    REQUIRE(sample.timing->timecode->format.frameRate.numerator == 24000);
+    REQUIRE(sample.timing->timecode->format.frameRate.denominator == 1001);
+    REQUIRE(sample.timing->timecode->format.dropFrame == true);
+    REQUIRE(sample.timing->timecode->format.oddField == true);
+
+    REQUIRE(sample.tracker->notes == "Example generated sample.");
+    REQUIRE(sample.tracker->recording == false);
+    REQUIRE(sample.tracker->slate == "A101_A_4");
+    REQUIRE(sample.tracker->status == "Optical Good");
+
+    REQUIRE(sample.transforms->transforms.size() == 1);
+    REQUIRE(sample.transforms->transforms[0].translation.x == 1.0);
+    REQUIRE(sample.transforms->transforms[0].translation.y == 2.0);
+    REQUIRE(sample.transforms->transforms[0].translation.z == 3.0);
+    REQUIRE(sample.transforms->transforms[0].rotation.pan == 180.0);
+    REQUIRE(sample.transforms->transforms[0].rotation.tilt == 90.0);
+    REQUIRE(sample.transforms->transforms[0].rotation.roll == 45.0);
+    REQUIRE(sample.transforms->transforms[0].transformId == "Camera");
 }
