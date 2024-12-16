@@ -49,6 +49,14 @@ else()
 endif()
 find_package(opentrackio-cpp REQUIRED PATHS "${CMAKE_CURRENT_LIST_DIR}/../install/cmake")
 
+# Json validator
+FetchContent_Declare(nlohmann_json_schema_validator
+  GIT_REPOSITORY https://github.com/pboettch/json-schema-validator
+  GIT_PROGRESS TRUE  GIT_SHALLOW TRUE
+  GIT_TAG 2.3.0)
+
+FetchContent_MakeAvailable(nlohmann_json_schema_validator)
+
 # Compile
 add_executable(tests test.cpp)
 target_compile_features(tests PUBLIC cxx_std_20)
@@ -65,6 +73,7 @@ target_link_libraries(tests
         ssl
         crypto
         CURL::libcurl_static
+        nlohmann_json_schema_validator
 )
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_link_libraries(tests PRIVATE opentrackio-cppd.lib)
