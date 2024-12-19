@@ -307,7 +307,7 @@ namespace opentrackio::opentrackioproperties
 
         if (!proJson["version"].is_array())
         {
-            errors.emplace_back("field: protocol version isn't of type: [int]");
+            errors.emplace_back("field: protocol version isn't of type: [int, int, int]");
             return std::nullopt;
         }
 
