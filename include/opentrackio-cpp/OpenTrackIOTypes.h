@@ -265,8 +265,8 @@ namespace opentrackio::opentrackiotypes
         Vector3 translation{};
         Rotation rotation{};
         std::optional<Vector3> scale = std::nullopt;
-        std::optional<std::string> transformId = std::nullopt;
-        std::optional<std::string> parentTransformId = std::nullopt;
+        std::optional<std::string> id = std::nullopt;
+        std::optional<std::string> parentId = std::nullopt;
 
         Transform() = default;
 
@@ -306,8 +306,8 @@ namespace opentrackio::opentrackiotypes
                 json.erase("scale");
             }
             
-            OpenTrackIOHelpers::assignField(json, "transformId", tf.transformId, "string", errors);
-            OpenTrackIOHelpers::assignField(json, "parentTransformId", tf.parentTransformId, "string", errors);
+            OpenTrackIOHelpers::assignField(json, "id", tf.id, "string", errors);
+            OpenTrackIOHelpers::assignField(json, "parentId", tf.parentId, "string", errors);
 
             return tf;
         }

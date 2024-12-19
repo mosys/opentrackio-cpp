@@ -84,7 +84,16 @@ bool getStringSchema(std::string& response)
 bool getStringExample(const std::string name, std::string& response)
 {
     std::string url = OPENTRACKIO_ROOT_URL + "examples/" + name + ".json";
+    std::cout << "Testing " << name << std::endl;
     return getString(url, response);
+}
+
+void testVersion(const std::vector<int> version)
+{
+    REQUIRE(version.size() == 3);
+    REQUIRE(version[0] == OPEN_TRACK_IO_PROTOCOL_MAJOR_VERSION);
+    REQUIRE(version[1] == OPEN_TRACK_IO_PROTOCOL_MINOR_VERSION);
+    REQUIRE(version[2] == OPEN_TRACK_IO_PROTOCOL_PATCH);
 }
 
 void testSampleParse(const std::string response, opentrackio::OpenTrackIOSample& sample)
@@ -92,7 +101,7 @@ void testSampleParse(const std::string response, opentrackio::OpenTrackIOSample&
     opentrackio::OpenTrackIOSample stringSample;
     REQUIRE(stringSample.initialise(std::string_view(response)));
     REQUIRE(stringSample.protocol->name == OPEN_TRACK_IO_PROTOCOL_NAME);
-    REQUIRE(stringSample.protocol->version == OPEN_TRACK_IO_PROTOCOL_VERSION);
+    testVersion(stringSample.protocol->version);
 
     json example = json::parse(response);
     REQUIRE(sample.initialise(example));
@@ -105,27 +114,28 @@ void testRecommendedDynamic(const std::string response)
     opentrackio::OpenTrackIOSample sample;
     testSampleParse(response, sample);
 
-    REQUIRE(sample.lens->distortion->radial == std::vector<double>{1.0, 2.0, 3.0});
-    REQUIRE(sample.lens->distortion->tangential == std::vector<double>{1.0, 2.0});
+    REQUIRE(sample.lens->distortion->size() == 1);
+    REQUIRE(sample.lens->distortion->at(0).radial == std::vector<double>{1.0, 2.0, 3.0});
+    REQUIRE(sample.lens->distortion->at(0).tangential == std::vector<double>{1.0, 2.0});
     REQUIRE(sample.lens->encoders->focus == 0.1);
     REQUIRE(sample.lens->encoders->iris == 0.2);
     REQUIRE(sample.lens->encoders->zoom == 0.3);
     REQUIRE(sample.lens->entrancePupilOffset == 0.123);
     REQUIRE(sample.lens->fStop == 4.0);
     REQUIRE(sample.lens->focalLength == 24.305);
-    REQUIRE(sample.lens->focusDistance == 1000);
-    REQUIRE(sample.lens->perspectiveShift->x == 0.1);
-    REQUIRE(sample.lens->perspectiveShift->y == 0.2);
+    REQUIRE(sample.lens->focusDistance == 10.0);
+    REQUIRE(sample.lens->projectionOffset->x == 0.1);
+    REQUIRE(sample.lens->projectionOffset->y == 0.2);
 
     REQUIRE(sample.protocol->name == OPEN_TRACK_IO_PROTOCOL_NAME);
-    REQUIRE(sample.protocol->version == OPEN_TRACK_IO_PROTOCOL_VERSION);
+    testVersion(sample.protocol->version);
 
     REQUIRE(sample.sampleId->id.substr(0, 9) == "urn:uuid:");
     REQUIRE(sample.sourceId->id.substr(0, 9) == "urn:uuid:");
     REQUIRE(sample.sourceNumber->value == 1);
 
-    REQUIRE(sample.timing->frameRate->numerator == 24000);
-    REQUIRE(sample.timing->frameRate->denominator == 1001);
+    REQUIRE(sample.timing->sampleRate->numerator == 24000);
+    REQUIRE(sample.timing->sampleRate->denominator == 1001);
     REQUIRE(sample.timing->mode == opentrackio::opentrackioproperties::Timing::Mode::EXTERNAL);
     REQUIRE(sample.timing->timecode->hours == 1);
     REQUIRE(sample.timing->timecode->minutes == 2);
@@ -133,8 +143,7 @@ void testRecommendedDynamic(const std::string response)
     REQUIRE(sample.timing->timecode->frames == 4);
     REQUIRE(sample.timing->timecode->format.frameRate.numerator == 24000);
     REQUIRE(sample.timing->timecode->format.frameRate.denominator == 1001);
-    REQUIRE(sample.timing->timecode->format.dropFrame);
-    REQUIRE(sample.timing->timecode->format.oddField);
+    REQUIRE(sample.timing->timecode->format.subFrame == 0);
 
     REQUIRE(sample.tracker->notes == "Example generated sample.");
     REQUIRE(sample.tracker->recording == false);
@@ -148,7 +157,7 @@ void testRecommendedDynamic(const std::string response)
     REQUIRE(sample.transforms->transforms[0].rotation.pan == 180.0);
     REQUIRE(sample.transforms->transforms[0].rotation.tilt == 90.0);
     REQUIRE(sample.transforms->transforms[0].rotation.roll == 45.0);
-    REQUIRE(sample.transforms->transforms[0].transformId == "Camera");
+    REQUIRE(sample.transforms->transforms[0].id == "Camera");
 }
 
 void testRecommendedStatic(const std::string response)
@@ -177,11 +186,16 @@ void testCompleteDynamic(const std::string response)
 
     REQUIRE(sample.lens->custom->size() == 2);
     REQUIRE(sample.lens->custom == std::vector<double>{1.0, 2.0});
-    REQUIRE(sample.lens->distortion->radial == std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0});
-    REQUIRE(sample.lens->distortion->tangential == std::vector<double>{1.0, 2.0});
-    REQUIRE(sample.lens->distortionOverscan == 1.0);
-    REQUIRE(sample.lens->distortionShift->x == 1.0);
-    REQUIRE(sample.lens->distortionShift->y == 2.0);
+    REQUIRE(sample.lens->distortion->size() == 2);
+    REQUIRE(sample.lens->distortion->at(0).radial == std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0});
+    REQUIRE(sample.lens->distortion->at(0).tangential == std::vector<double>{1.0, 2.0});
+    REQUIRE(sample.lens->distortion->at(0).model == "Brown-Conrady D-U");
+    REQUIRE(sample.lens->distortion->at(1).radial == std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0});
+    REQUIRE(sample.lens->distortion->at(1).tangential == std::vector<double>{1.0, 2.0});
+    REQUIRE(sample.lens->distortion->at(1).model == "Brown-Conrady U-D");
+    REQUIRE(sample.lens->distortionOverscan == 1.1);
+    REQUIRE(sample.lens->distortionOffset->x == 1.0);
+    REQUIRE(sample.lens->distortionOffset->y == 2.0);
     REQUIRE(sample.lens->encoders->focus == 0.1);
     REQUIRE(sample.lens->encoders->iris == 0.2);
     REQUIRE(sample.lens->encoders->zoom == 0.3);
@@ -192,17 +206,16 @@ void testCompleteDynamic(const std::string response)
     REQUIRE(sample.lens->fStop == 4.0);
     REQUIRE(sample.lens->focalLength == 24.305);
     REQUIRE(sample.lens->focusDistance == 10.0);
-    REQUIRE(sample.lens->perspectiveShift->x == 0.1);
-    REQUIRE(sample.lens->perspectiveShift->y == 0.2);
+    REQUIRE(sample.lens->projectionOffset->x == 0.1);
+    REQUIRE(sample.lens->projectionOffset->y == 0.2);
     REQUIRE(sample.lens->rawEncoders->focus == 1000);
     REQUIRE(sample.lens->rawEncoders->iris == 2000);
     REQUIRE(sample.lens->rawEncoders->zoom == 3000);
     REQUIRE(sample.lens->tStop == 4.1);
-    REQUIRE(sample.lens->undistortion->radial == std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0});
-    REQUIRE(sample.lens->undistortion->tangential == std::vector<double>{1.0, 2.0});
+    REQUIRE(sample.lens->undistortionOverscan == 1.2);
 
     REQUIRE(sample.protocol->name == OPEN_TRACK_IO_PROTOCOL_NAME);
-    REQUIRE(sample.protocol->version == OPEN_TRACK_IO_PROTOCOL_VERSION);
+    testVersion(sample.protocol->version);
     REQUIRE(sample.relatedSampleIds->samples.size() == 2);
     REQUIRE(sample.relatedSampleIds->samples[0].substr(0, 9) == "urn:uuid:");
     REQUIRE(sample.relatedSampleIds->samples[1].substr(0, 9) == "urn:uuid:");
@@ -210,15 +223,16 @@ void testCompleteDynamic(const std::string response)
     REQUIRE(sample.sourceId->id.substr(0, 9) == "urn:uuid:");
     REQUIRE(sample.sourceNumber->value == 1);
 
-    REQUIRE(sample.timing->frameRate->numerator == 24000);
-    REQUIRE(sample.timing->frameRate->denominator == 1001);
+    REQUIRE(sample.timing->sampleRate->numerator == 24000);
+    REQUIRE(sample.timing->sampleRate->denominator == 1001);
     REQUIRE(sample.timing->mode == opentrackio::opentrackioproperties::Timing::Mode::INTERNAL);
     REQUIRE(sample.timing->sampleTimestamp->seconds == 1718806554);
     REQUIRE(sample.timing->sampleTimestamp->nanoseconds == 500000000);
     REQUIRE(sample.timing->sampleTimestamp->attoseconds == 0);
     REQUIRE(sample.timing->sequenceNumber == 0);
-    REQUIRE(sample.timing->synchronization->frequency.numerator == 24000);
-    REQUIRE(sample.timing->synchronization->frequency.denominator == 1001);
+    // TODO reenable these tests when example fixed
+    //REQUIRE(sample.timing->synchronization->frequency.numerator == 24000);
+    //REQUIRE(sample.timing->synchronization->frequency.denominator == 1001);
     REQUIRE(sample.timing->synchronization->locked);
     REQUIRE(sample.timing->synchronization->source == opentrackio::opentrackioproperties::Timing::Synchronization::SourceType::PTP);
     REQUIRE(sample.timing->synchronization->offsets->translation == 1.0);
@@ -234,8 +248,7 @@ void testCompleteDynamic(const std::string response)
     REQUIRE(sample.timing->timecode->frames == 4);
     REQUIRE(sample.timing->timecode->format.frameRate.numerator == 24000);
     REQUIRE(sample.timing->timecode->format.frameRate.denominator == 1001);
-    REQUIRE(sample.timing->timecode->format.dropFrame);
-    REQUIRE(sample.timing->timecode->format.oddField);
+    REQUIRE(sample.timing->timecode->format.subFrame == 0);
 
     REQUIRE(sample.tracker->notes == "Example generated sample.");
     REQUIRE(sample.tracker->recording == false);
@@ -249,7 +262,7 @@ void testCompleteDynamic(const std::string response)
     REQUIRE(sample.transforms->transforms[0].rotation.pan == 180.0);
     REQUIRE(sample.transforms->transforms[0].rotation.tilt == 90.0);
     REQUIRE(sample.transforms->transforms[0].rotation.roll == 45.0);
-    REQUIRE(sample.transforms->transforms[0].transformId == "Dolly");
+    REQUIRE(sample.transforms->transforms[0].id == "Dolly");
     REQUIRE(sample.transforms->transforms[1].translation.x == 1.0);
     REQUIRE(sample.transforms->transforms[1].translation.y == 2.0);
     REQUIRE(sample.transforms->transforms[1].translation.z == 3.0);
@@ -259,8 +272,8 @@ void testCompleteDynamic(const std::string response)
     REQUIRE(sample.transforms->transforms[1].scale->x == 1.0);
     REQUIRE(sample.transforms->transforms[1].scale->y == 2.0);
     REQUIRE(sample.transforms->transforms[1].scale->z == 3.0);
-    REQUIRE(sample.transforms->transforms[1].transformId == "Crane Arm");
-    REQUIRE(sample.transforms->transforms[1].parentTransformId == "Dolly");
+    REQUIRE(sample.transforms->transforms[1].id == "Crane Arm");
+    REQUIRE(sample.transforms->transforms[1].parentId == "Dolly");
     REQUIRE(sample.transforms->transforms[2].translation.x == 1.0);
     REQUIRE(sample.transforms->transforms[2].translation.y == 2.0);
     REQUIRE(sample.transforms->transforms[2].translation.z == 3.0);
@@ -270,8 +283,8 @@ void testCompleteDynamic(const std::string response)
     REQUIRE(sample.transforms->transforms[2].scale->x == 1.0);
     REQUIRE(sample.transforms->transforms[2].scale->y == 2.0);
     REQUIRE(sample.transforms->transforms[2].scale->z == 3.0);
-    REQUIRE(sample.transforms->transforms[2].transformId == "Camera");
-    REQUIRE(sample.transforms->transforms[2].parentTransformId == "Crane Arm");
+    REQUIRE(sample.transforms->transforms[2].id == "Camera");
+    REQUIRE(sample.transforms->transforms[2].parentId == "Crane Arm");
 }
 
 void testCompleteStatic(const std::string response)
@@ -296,7 +309,9 @@ void testCompleteStatic(const std::string response)
     REQUIRE(sample.duration->rational.numerator == 1);
     REQUIRE(sample.duration->rational.denominator == 25);
 
+    REQUIRE(sample.lens->distortionIsProjection == true);
     REQUIRE(sample.lens->distortionOverscanMax == 1.2);
+    REQUIRE(sample.lens->undistortionOverscanMax == 1.3);
     REQUIRE(sample.lens->nominalFocalLength == 14);
     REQUIRE(sample.lens->serialNumber == "1234567890A");
 

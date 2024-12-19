@@ -176,7 +176,10 @@ namespace opentrackio::opentrackioproperties
             OpenTrackIOHelpers::assignField(lensJson, "model", lens.model, "string", errors);
             OpenTrackIOHelpers::assignField(lensJson, "nominalFocalLength", lens.nominalFocalLength, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "serialNumber", lens.serialNumber, "string", errors);
+            // TODO this key will become distortionIsProjection
+            OpenTrackIOHelpers::assignField(lensJson, "distortionProjection", lens.distortionIsProjection, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "distortionOverscanMax", lens.distortionOverscanMax, "double", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "undistortionOverscanMax", lens.undistortionOverscanMax, "double", errors);
 
             OpenTrackIOHelpers::clearFieldIfEmpty(json["static"], "lens");
         }
@@ -195,38 +198,48 @@ namespace opentrackio::opentrackioproperties
                 lensJson.erase("custom");
             }
 
-            if (lensJson.contains("distortion"))
+            if (lensJson.contains("distortion") && lensJson["distortion"].is_array())
             {
-                std::optional<std::vector<double>> radial = std::nullopt;
-                std::optional<std::vector<double>> tangential = std::nullopt;
-
-                OpenTrackIOHelpers::assignField(lensJson["distortion"], "radial", radial, "double", errors);
-                OpenTrackIOHelpers::assignField(lensJson["distortion"], "tangential", tangential, "double", errors);
-
-                if (radial.has_value())
+                lens.distortion = std::vector<Distortion>{};
+                for (auto& dist : lensJson["distortion"])
                 {
-                    lens.distortion = Distortion();
-                    lens.distortion->radial = std::move(radial.value());
-                    lens.distortion->tangential = std::move(tangential);
+                    std::optional<std::vector<double>> radial = std::nullopt;
+                    std::optional<std::vector<double>> tangential = std::nullopt;
+
+                    OpenTrackIOHelpers::assignField(dist, "radial", radial, "double", errors);
+                    OpenTrackIOHelpers::assignField(dist, "tangential", tangential, "double", errors);
+
+                    if (radial.has_value())
+                    {
+                        Lens::Distortion d = Distortion();
+                        d.radial = std::move(radial.value());
+                        d.tangential = std::move(tangential);
+                        if (dist.contains("model"))
+                        {
+                            d.model = dist["model"];
+                        }
+                        lens.distortion->emplace_back(d);
+                    }
                 }
                 lensJson.erase("distortion");
             }
 
             OpenTrackIOHelpers::assignField(lensJson, "distortionOverscan", lens.distortionOverscan, "double", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "undistortionOverscan", lens.undistortionOverscan, "double", errors);
 
-            if (lensJson.contains("distortionShift"))
+            if (lensJson.contains("distortionOffset"))
             {
                 std::optional<double> x = std::nullopt;
                 std::optional<double> y = std::nullopt;
 
-                OpenTrackIOHelpers::assignField(lensJson["distortionShift"], "x", x, "double", errors);
-                OpenTrackIOHelpers::assignField(lensJson["distortionShift"], "y", y, "double", errors);
+                OpenTrackIOHelpers::assignField(lensJson["distortionOffset"], "x", x, "double", errors);
+                OpenTrackIOHelpers::assignField(lensJson["distortionOffset"], "y", y, "double", errors);
 
                 if (x.has_value() && y.has_value())
                 {
-                    lens.distortionShift = DistortionShift{x.value(), y.value()};
+                    lens.distortionOffset = DistortionOffset{x.value(), y.value()};
                 }
-                lensJson.erase("distortionShift");
+                lensJson.erase("distortionOffset");
             }
 
             OpenTrackIOHelpers::assignField(lensJson, "encoders", lens.encoders, "double", errors);
@@ -253,40 +266,23 @@ namespace opentrackio::opentrackioproperties
             OpenTrackIOHelpers::assignField(lensJson, "focalLength", lens.focalLength, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "focusDistance", lens.focusDistance, "double", errors);
 
-            if (lensJson.contains("perspectiveShift"))
+            if (lensJson.contains("projectionOffset"))
             {
                 std::optional<double> x = std::nullopt;
                 std::optional<double> y = std::nullopt;
 
-                OpenTrackIOHelpers::assignField(lensJson["perspectiveShift"], "x", x, "double", errors);
-                OpenTrackIOHelpers::assignField(lensJson["perspectiveShift"], "y", y, "double", errors);
+                OpenTrackIOHelpers::assignField(lensJson["projectionOffset"], "x", x, "double", errors);
+                OpenTrackIOHelpers::assignField(lensJson["projectionOffset"], "y", y, "double", errors);
 
                 if (x.has_value() && y.has_value())
                 {
-                    lens.perspectiveShift = PerspectiveShift{x.value(), y.value()};
+                    lens.projectionOffset = ProjectionOffset{x.value(), y.value()};
                 }
-                lensJson.erase("perspectiveShift");
+                lensJson.erase("projectionOffset");
             }
 
             OpenTrackIOHelpers::assignField(lensJson, "rawEncoders", lens.rawEncoders, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "tStop", lens.tStop, "double", errors);
-
-            if (lensJson.contains("undistortion"))
-            {
-                std::optional<std::vector<double>> radial = std::nullopt;
-                std::optional<std::vector<double>> tangential = std::nullopt;
-
-                OpenTrackIOHelpers::assignField(lensJson["undistortion"], "radial", radial, "double", errors);
-                OpenTrackIOHelpers::assignField(lensJson["undistortion"], "tangential", tangential, "double", errors);
-
-                if (radial.has_value())
-                {
-                    lens.undistortion = Undistortion();
-                    lens.undistortion->radial = std::move(radial.value());
-                    lens.undistortion->tangential = std::move(tangential);
-                }
-                lensJson.erase("undistortion");
-            }
 
             OpenTrackIOHelpers::clearFieldIfEmpty(json, "lens");
         }
@@ -309,16 +305,31 @@ namespace opentrackio::opentrackioproperties
             return std::nullopt;
         }
 
-
-        std::optional<std::string> versionStr;
-        const std::regex pattern{R"(^[0-9]+.[0-9]+.[0-9]+$)"};
-        OpenTrackIOHelpers::assignRegexField(proJson, "version", versionStr, pattern, errors);
-        
-        if (!versionStr.has_value())
+        if (!proJson["version"].is_array())
         {
+            errors.emplace_back("field: protocol version isn't of type: [int]");
             return std::nullopt;
         }
-        pro.version = std::move(versionStr.value());
+
+        if (proJson["version"].size() != 3)
+        {
+            errors.emplace_back("field: protocol version isn't of size 3: [int, int, int]");
+            return std::nullopt;
+        }
+
+        if (proJson["version"][0] != OPEN_TRACK_IO_PROTOCOL_MAJOR_VERSION ||
+            proJson["version"][1] != OPEN_TRACK_IO_PROTOCOL_MINOR_VERSION || 
+            proJson["version"][2] != OPEN_TRACK_IO_PROTOCOL_PATCH)
+        {
+            errors.emplace_back("version: protocol version mismatch");
+            return std::nullopt;
+        }
+        
+        pro.version = {
+            OPEN_TRACK_IO_PROTOCOL_MAJOR_VERSION,
+            OPEN_TRACK_IO_PROTOCOL_MINOR_VERSION,
+            OPEN_TRACK_IO_PROTOCOL_PATCH
+        };
 
         json.erase("protocol");
         return pro;
@@ -439,10 +450,10 @@ namespace opentrackio::opentrackioproperties
         Timing timing{};
         auto& timingJson = json["timing"];
 
-        if (timingJson.contains("frameRate"))
+        if (timingJson.contains("sampleRate"))
         {
-            timing.frameRate = opentrackiotypes::Rational::parse(timingJson, "frameRate", errors);
-            timingJson.erase("frameRate");
+            timing.sampleRate = opentrackiotypes::Rational::parse(timingJson, "sampleRate", errors);
+            timingJson.erase("sampleRate");
         }
         
         std::optional<std::string> str;
@@ -494,22 +505,25 @@ namespace opentrackio::opentrackioproperties
         Timing::Synchronization outSync{};
 
         // Required Fields -------
-        bool hasRequired = json.contains("frequency") && json.contains("locked") && json.contains("source");
+        bool hasRequired = json.contains("locked") && json.contains("source");
         if (!hasRequired)
         {
             errors.emplace_back("field: timing/synchronization is missing required fields");
             return std::nullopt;
         }
         
-        std::optional<opentrackiotypes::Rational> freq = opentrackiotypes::Rational::parse(json, "frequency", errors);
-        if (!freq.has_value())
+        if (json.contains("frequency"))
         {
-            errors.emplace_back("field: timing/synchronization/frequency is missing required fields");
-            return std::nullopt;
+            std::optional<opentrackiotypes::Rational> freq = opentrackiotypes::Rational::parse(json, "frequency", errors);
+            if (!freq.has_value())
+            {
+                errors.emplace_back("field: timing/synchronization/frequency is missing required fields");
+                return std::nullopt;
+            }
+            outSync.frequency = freq.value();
+            json.erase("frequency");
         }
-        outSync.frequency = freq.value();
-        json.erase("frequency");
-        
+
         if (!OpenTrackIOHelpers::checkTypeAndSetField(json["locked"], outSync.locked))
         {
             errors.emplace_back("field: timing/synchronization/lock isn't of type: bool");

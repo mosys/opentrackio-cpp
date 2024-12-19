@@ -109,8 +109,9 @@ namespace opentrackio::opentrackioproperties
     struct Lens
     {
         /**
-         * Until the OpenLensIO model is finalised, this list provides custom
-         * coefficients for a particular lens model e.g. undistortion, anamorphic etc. */
+         * This list provides optional custom additonal coefficients for a
+         * particular lens model. The meaning of which would require negotiation
+         * between a particular producer and consumer. */
         std::optional<std::vector<double>> custom = std::nullopt;
 
         /**
@@ -120,9 +121,17 @@ namespace opentrackio::opentrackioproperties
         struct Distortion
         {
             std::vector<double> radial{};
-            std::optional<std::vector<double>> tangential = std::nullopt;            
+            std::optional<std::vector<double>> tangential = std::nullopt;
+            std::optional<std::string> model = std::nullopt;
         };
-        std::optional<Distortion> distortion = std::nullopt;
+        std::optional<std::vector<Distortion>> distortion = std::nullopt;
+
+        /**
+         * Indicator that the OpenLensIO distortion model is the Projection
+           Characterization, not the Field-Of-View Characterization. This is
+           primarily relevant when storing overscan values, not in transmission
+           as the overscan should be calculated by the consumer. */
+        std::optional<bool> distortionIsProjection = std::nullopt;
 
         /**
          * Overscan factor on lens distortion */
@@ -131,16 +140,23 @@ namespace opentrackio::opentrackioproperties
         /**
          * Static maximum overscan factor on lens distortion. */
         std::optional<double> distortionOverscanMax = std::nullopt;
+        /**
+         * Overscan factor on lens undistortion */
+        std::optional<double> undistortionOverscan = std::nullopt;
+
+        /**
+         * Static maximum overscan factor on lens undistortion. */
+        std::optional<double> undistortionOverscanMax = std::nullopt;
 
         /**
          * Shift in X and Y of the centre of distortion of the virtual camera
          * Units: millimeters */
-        struct DistortionShift
+        struct DistortionOffset
         {
             double x;
             double y;
         };
-        std::optional<DistortionShift> distortionShift = std::nullopt;
+        std::optional<DistortionOffset> distortionOffset = std::nullopt;
 
         /**
          * Normalised real numbers (0-1) for focus, iris and zoom. Encoders are represented in this way (as opposed to 
@@ -233,16 +249,6 @@ namespace opentrackio::opentrackioproperties
          * The linear t-number of the lens, equal to the F-number of the lens divided by the square root of the
          * transmittance of the lens. */
         std::optional<double> tStop = std::nullopt;
-
-        /**
-         * Coefficients for calculating the undistortion characteristics of a lens comprising radial distortion
-         * coefficients of the spherical distortion (k1-N) and the tangential distortion (p1-N) */
-        struct Undistortion
-        {
-            std::vector<double> radial{};
-            std::optional<std::vector<double>> tangential = std::nullopt;
-        };
-        std::optional<Undistortion> undistortion = std::nullopt;
 
         static std::optional<Lens> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
@@ -358,7 +364,7 @@ namespace opentrackio::opentrackioproperties
           *         - ntp: The tracking device is locked to an NTP server */
         struct Synchronization 
         {
-            opentrackiotypes::Rational frequency;
+            std::optional<opentrackiotypes::Rational> frequency = std::nullopt;
             
             bool locked;
 

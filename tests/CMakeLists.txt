@@ -58,12 +58,26 @@ FetchContent_Declare(nlohmann_json_schema_validator
 FetchContent_MakeAvailable(nlohmann_json_schema_validator)
 
 # Compile
-add_executable(tests test.cpp)
+add_executable(tests
+    test.cpp
+)
 target_compile_features(tests PUBLIC cxx_std_20)
 target_include_directories(tests
     PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/../install/include"
         "${CMAKE_CURRENT_LIST_DIR}/../external"
+)
+
+# IDE
+target_sources(tests
+    PRIVATE
+        test.cpp
+        ../include/opentrackio-cpp/OpenTrackIOHelper.h
+        ../include/opentrackio-cpp/OpenTrackIOProperties.h
+        ../include/opentrackio-cpp/OpenTrackIOSample.h
+        ../include/opentrackio-cpp/OpenTrackIOTypes.h
+        ../src/OpenTrackIOProperties.cpp
+        ../src/OpenTrackIOSample.cpp
 )
 
 # Linkage
