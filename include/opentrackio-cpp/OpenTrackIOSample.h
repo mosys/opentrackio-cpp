@@ -19,8 +19,6 @@
 
 namespace opentrackio
 {
-    #define OPEN_TRACK_IO_PROTOCOL_NAME "OpenTrackIO"
-    #define OPEN_TRACK_IO_PROTOCOL_VERSION "0.9.0"
     struct OpenTrackIOSample
     {
         std::optional<opentrackioproperties::Camera> camera = std::nullopt;
