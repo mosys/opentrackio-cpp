@@ -47,7 +47,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 else()
     link_directories(${CMAKE_CURRENT_LIST_DIR}/../build/release/Release)
 endif()
-find_package(opentrackio-cpp REQUIRED PATHS "${CMAKE_CURRENT_LIST_DIR}/../install/cmake")
 
 # Json validator
 FetchContent_Declare(nlohmann_json_schema_validator
@@ -64,7 +63,7 @@ add_executable(tests
 target_compile_features(tests PUBLIC cxx_std_20)
 target_include_directories(tests
     PRIVATE
-        "${CMAKE_CURRENT_LIST_DIR}/../install/include"
+        "${CMAKE_CURRENT_LIST_DIR}/../include"
         "${CMAKE_CURRENT_LIST_DIR}/../external"
 )
 

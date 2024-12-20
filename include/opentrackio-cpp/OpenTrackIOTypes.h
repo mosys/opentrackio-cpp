@@ -132,8 +132,7 @@ namespace opentrackio::opentrackiotypes
         struct Format
         {
             Rational frameRate{};
-            bool dropFrame = false;
-            std::optional<bool> oddField = std::nullopt;            
+            std::optional<int> subFrame = std::nullopt;
         };
         Format format{};
         
@@ -164,7 +163,6 @@ namespace opentrackio::opentrackiotypes
 
             const bool formatFieldValid =
                     tcJson["format"].contains("frameRate") &&
-                    tcJson["format"].contains("dropFrame") &&
                     tcJson["format"]["frameRate"].contains("num") &&
                     tcJson["format"]["frameRate"].contains("denom");
 
@@ -175,23 +173,16 @@ namespace opentrackio::opentrackiotypes
             }
 
             auto fr = Rational::parse(tcJson["format"], "frameRate", errors);
-            bool drop;
-            std::optional<bool> odd;
-
-            if (!OpenTrackIOHelpers::checkTypeAndSetField(tcJson["format"]["dropFrame"], drop))
-            {
-                errors.emplace_back("field: timing/timecode/format/dropFrame isn't of type: bool");
-                return std::nullopt;
-            }
+            std::optional<int> sub;
 
             if (!fr.has_value())
             {
                 return std::nullopt;
             }
 
-            OpenTrackIOHelpers::assignField(tcJson["format"], "oddField", odd, "bool", errors);
+            OpenTrackIOHelpers::assignField(tcJson["format"], "subFrame", sub, "int", errors);
 
-            return Timecode{hours.value(), minutes.value(), seconds.value(), frames.value(), Format{fr.value(), drop, odd}};
+            return Timecode{hours.value(), minutes.value(), seconds.value(), frames.value(), Format{fr.value(), sub}};
         }
     };
 
