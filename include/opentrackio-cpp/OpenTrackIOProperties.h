@@ -258,10 +258,10 @@ namespace opentrackio::opentrackioproperties
         /**
          * Name of the protocol in which the sample is being employed, and version of that protocol. */
         std::string name;
-        
+
         /**
-         * Pattern: ^[0-9]+.[0-9]+.[0-9]+$ */
-        std::string version;
+         * Version as integers e.g. 1.0.0 */
+        std::vector<int> version;
 
         static std::optional<Protocol> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
