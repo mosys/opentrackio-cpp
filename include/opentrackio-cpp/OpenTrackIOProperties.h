@@ -18,6 +18,11 @@
 #include <nlohmann/json.hpp>
 #include "OpenTrackIOTypes.h"
 
+#define OPEN_TRACK_IO_PROTOCOL_NAME "OpenTrackIO"
+#define OPEN_TRACK_IO_PROTOCOL_MAJOR_VERSION 0
+#define OPEN_TRACK_IO_PROTOCOL_MINOR_VERSION 9
+#define OPEN_TRACK_IO_PROTOCOL_PATCH         1
+
 namespace opentrackio::opentrackioproperties
 {
     struct Camera
@@ -219,16 +224,16 @@ namespace opentrackio::opentrackioproperties
          * Nominal focal length of the lens.
          * The number printed on the side of a prime lens, e.g. 50 mm, and undefined in the case of a zoom lens. */
         std::optional<double> nominalFocalLength = std::nullopt;
-     
+
         /**
-         * Shift in X and Y of the centre of perspective projection of the virtual camera
+         * Offset in X and Y of the centre of perspective projection of the virtual camera
          * Units: millimeters */
-         struct PerspectiveShift
-         {
-             double x;
-             double y;
-         };
-        std::optional<PerspectiveShift> perspectiveShift = std::nullopt;
+        struct ProjectionOffset
+        {
+            double x;
+            double y;
+        };
+        std::optional<ProjectionOffset> projectionOffset = std::nullopt;
 
         /**
          * Raw encoder values for focus, iris and zoom. These values are dependent on encoder resolution and
@@ -313,7 +318,7 @@ namespace opentrackio::opentrackioproperties
         /**
          * Sample frame rate as a rational number. Drop frame rates such as 29.97 should be represented as 
          * e.g. 30000/1001. In a variable rate system this should is estimated from the last sample delta time */
-        std::optional<opentrackiotypes::Rational> frameRate = std::nullopt;
+        std::optional<opentrackiotypes::Rational> sampleRate = std::nullopt;
          
         /**
          * Enumerated value indicating whether the sample transport mechanism provides inherent ('external') timing, 
