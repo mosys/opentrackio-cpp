@@ -204,8 +204,11 @@ namespace opentrackio
         {
             nlohmann::json distJson{};
             distJson["radial"] = dist.radial;
-            distJson["tangential"] = dist.tangential.value();
-            baseJson.push_back(distJson);
+            if (dist.tangential.has_value())
+            {
+                distJson["tangential"] = dist.tangential.value();
+            }
+            baseJson["lens"]["distortion"].push_back(distJson);
         }
 
         assignJson(baseJson["lens"], "distortionOverscan", lens->distortionOverscan);
