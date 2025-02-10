@@ -1,5 +1,5 @@
 /**
- * Copyright 2024 Mo-Sys Engineering Ltd
+ * Copyright 2025 Mo-Sys Engineering Ltd
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), 
  * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, 
  * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
@@ -537,31 +537,29 @@ namespace opentrackio::opentrackioproperties
             errors.emplace_back("field: timing/synchronization/source isn't of type: string");
             return std::nullopt;
         }
+
+        if (str == "genlock")
+        {
+            outSync.source = Synchronization::SourceType::GEN_LOCK;
+        }
+        else if (str == "videoIn")
+        {
+            outSync.source = Synchronization::SourceType::VIDEO_IN;
+        }
+        else if (str == "ptp")
+        {
+            outSync.source = Synchronization::SourceType::PTP;
+        }
+        else if (str == "ntp")
+        {
+            outSync.source = Synchronization::SourceType::NTP;
+        }
         else
         {
-            if (str == "genlock")
-            {
-                outSync.source = Synchronization::SourceType::GEN_LOCK;
-            }
-            else if (str == "videoIn")
-            {
-                outSync.source = Synchronization::SourceType::VIDEO_IN;
-            }
-            else if (str == "ptp")
-            {
-                outSync.source = Synchronization::SourceType::PTP;
-            }
-            else if (str == "ntp")
-            {
-                outSync.source = Synchronization::SourceType::NTP;
-            }
-            else
-            {
-                errors.emplace_back("field: timing/synchronization/source isn't a valid enumeration");
-                return std::nullopt;
-            }
-            json.erase("source");
+            errors.emplace_back("field: timing/synchronization/source isn't a valid enumeration");
+            return std::nullopt;
         }
+        json.erase("source");
 
         // Non-Required Fields --------
         if (json.contains("offsets"))
@@ -579,23 +577,73 @@ namespace opentrackio::opentrackioproperties
             json.erase("offsets");
         }
 
-        OpenTrackIOHelpers::assignField(json, "present", outSync.present, "bool", errors);
-        
         if (json.contains("ptp"))
         {
             outSync.ptp = Synchronization::Ptp{};
-            OpenTrackIOHelpers::assignField(json["ptp"], "domain", outSync.ptp->domain, "uint16", errors);
-            OpenTrackIOHelpers::assignField(json["ptp"], "offset", outSync.ptp->offset, "double", errors);
-            const std::regex pattern{R"(^([A-F0-9]{2}:){5}[A-F0-9]{2}$)"};
-            OpenTrackIOHelpers::assignRegexField(json["ptp"], "master", outSync.ptp->master, pattern, errors);
+            auto& ptpJson = json["ptp"];
 
-            if (!outSync.ptp->domain.has_value() && !outSync.ptp->offset.has_value() && !outSync.ptp->master.has_value())
+            std::optional<std::string> profileStr;
+            OpenTrackIOHelpers::assignField(ptpJson, "profile", profileStr, "string", errors);
+            bool successfullyAssignedProfileField = false;
+            if (profileStr.has_value())
+            {
+                successfullyAssignedProfileField = true;
+                if (profileStr == "IEEE Std 1588-2019")
+                {
+                    outSync.ptp->profile = Synchronization::Ptp::ProfileType::IEEE_Std_1588_2019;
+                }
+                else if (profileStr == "IEEE Std 802.1AS-2020")
+                {
+                    outSync.ptp->profile = Synchronization::Ptp::ProfileType::IEEE_Std_802_1AS_2020;
+                }
+                else if (profileStr == "SMPTE ST2059-2:2021")
+                {
+                    outSync.ptp->profile = Synchronization::Ptp::ProfileType::SMPTE_ST2059_2_2021;
+                }
+                else
+                {
+                    successfullyAssignedProfileField = false;
+                }
+            }
+
+            if (!successfullyAssignedProfileField)
+            {
+                errors.emplace_back("field: profile has an invalid string value.");
+                outSync.ptp->profile = std::nullopt;
+            }
+            ptpJson.erase("profile");
+
+            OpenTrackIOHelpers::assignField(ptpJson, "domain", outSync.ptp->domain, "uint16", errors);
+
+            const std::regex pattern{R"((?:^[0-9a-f]{2}(?::[0-9a-f]{2}){5}$)|(?:^[0-9a-f]{2}(?:-[0-9a-f]{2}){5}$))"};
+            OpenTrackIOHelpers::assignRegexField(ptpJson, "leaderIdentity", outSync.ptp->leaderIdentity, pattern, errors);
+
+            if (ptpJson.contains("leaderPriorities"))
+            {
+                outSync.ptp->leaderPriorities = Synchronization::Ptp::LeaderPriorities{};
+                OpenTrackIOHelpers::assignField(ptpJson["leaderPriorities"], "priority1", outSync.ptp->leaderPriorities->priority1, "uint8", errors);
+                OpenTrackIOHelpers::assignField(ptpJson["leaderPriorities"], "priority2", outSync.ptp->leaderPriorities->priority1, "uint8", errors);
+            }
+
+            OpenTrackIOHelpers::assignField(ptpJson, "leaderAccuracy", outSync.ptp->leaderAccuracy, "uint32", errors);
+            OpenTrackIOHelpers::assignField(ptpJson, "meanPathDelay", outSync.ptp->meanPathDelay, "uint32", errors);
+            OpenTrackIOHelpers::assignField(ptpJson, "vlan", outSync.ptp->vlan, "uint32", errors);
+            OpenTrackIOHelpers::assignField(ptpJson, "timeSource", outSync.ptp->timeSource, "uint32", errors);
+
+            // Required fields.
+            if (!outSync.ptp->profile.has_value() &&
+                !outSync.ptp->domain.has_value() &&
+                !outSync.ptp->leaderIdentity.has_value() &&
+                !outSync.ptp->leaderPriorities.has_value() &&
+                !outSync.ptp->leaderAccuracy.has_value() &&
+                !outSync.ptp->meanPathDelay.has_value())
             {
                 outSync.ptp = std::nullopt;
             }
             json.erase("ptp");
         }
-        
+        OpenTrackIOHelpers::assignField(json, "present", outSync.present, "bool", errors);
+
         return outSync;
     }
 
