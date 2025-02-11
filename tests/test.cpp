@@ -1,5 +1,5 @@
 /**
- * Copyright 2024 Mo-Sys Engineering Ltd
+ * Copyright 2025 Mo-Sys Engineering Ltd
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), 
  * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, 
  * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
@@ -32,24 +32,24 @@ TEST_CASE("OpenTrackIOSample basic initialisation", "[init]")
     REQUIRE_THROWS(sample.initialise(cbor));
     json j;
     REQUIRE(sample.initialise(j));
-    REQUIRE(sample.getErrors().size() == 0);
-    REQUIRE(sample.getWarnings().size() == 0);
+    REQUIRE(sample.getErrors().empty());
+    REQUIRE(sample.getWarnings().empty());
     REQUIRE(sample.getJson() == j);
 }
 
 //Convert curl out to string
-size_t curlToString(char* ptr, size_t size, size_t nmemb, void* data)
+size_t curlToString(const char* ptr, size_t size, size_t nmemb, void* data)
 {
-    std::string* str = (std::string*)data;
+    auto* str = static_cast<std::string*>(data);
     for (size_t x = 0; x < size * nmemb; ++x)
     {
-        (*str) += ptr[x];
+        *str += ptr[x];
     }
     return size * nmemb;
 }
 
 // Fetch string from the OpenTrackIO HTTPS endpoint
-bool getString(const std::string url, std::string& response)
+bool getString(const std::string& url, std::string& response)
 {
     if (CURL* curl = curl_easy_init())
     {
@@ -81,14 +81,14 @@ bool getStringSchema(std::string& response)
 }
 
 // Fetch example from the OpenTrackIO HTTPS endpoint
-bool getStringExample(const std::string name, std::string& response)
+bool getStringExample(const std::string& name, std::string& response)
 {
     std::string url = OPENTRACKIO_ROOT_URL + "examples/" + name + ".json";
     std::cout << "Testing " << name << std::endl;
     return getString(url, response);
 }
 
-void testVersion(const std::vector<int> version)
+void testVersion(const std::vector<int>& version)
 {
     REQUIRE(version.size() == 3);
     REQUIRE(version[0] == OPEN_TRACK_IO_PROTOCOL_MAJOR_VERSION);
@@ -96,7 +96,7 @@ void testVersion(const std::vector<int> version)
     REQUIRE(version[2] == OPEN_TRACK_IO_PROTOCOL_PATCH);
 }
 
-void testSampleParse(const std::string response, opentrackio::OpenTrackIOSample& sample)
+void testSampleParse(const std::string& response, opentrackio::OpenTrackIOSample& sample)
 {
     opentrackio::OpenTrackIOSample stringSample;
     REQUIRE(stringSample.initialise(std::string_view(response)));
@@ -109,7 +109,7 @@ void testSampleParse(const std::string response, opentrackio::OpenTrackIOSample&
     REQUIRE(sample.getJson() == example);
 }
 
-void testRecommendedDynamic(const std::string response)
+void testRecommendedDynamic(const std::string& response)
 {
     opentrackio::OpenTrackIOSample sample;
     testSampleParse(response, sample);
@@ -143,7 +143,6 @@ void testRecommendedDynamic(const std::string response)
     REQUIRE(sample.timing->timecode->frames == 4);
     REQUIRE(sample.timing->timecode->format.frameRate.numerator == 24000);
     REQUIRE(sample.timing->timecode->format.frameRate.denominator == 1001);
-    REQUIRE(sample.timing->timecode->format.subFrame == 0);
 
     REQUIRE(sample.tracker->notes == "Example generated sample.");
     REQUIRE(sample.tracker->recording == false);
@@ -160,7 +159,7 @@ void testRecommendedDynamic(const std::string response)
     REQUIRE(sample.transforms->transforms[0].id == "Camera");
 }
 
-void testRecommendedStatic(const std::string response)
+void testRecommendedStatic(const std::string& response)
 {
     opentrackio::OpenTrackIOSample sample;
     testSampleParse(response, sample);
@@ -172,7 +171,7 @@ void testRecommendedStatic(const std::string response)
     REQUIRE(sample.lens->model == "Model15");
 }
 
-void testCompleteDynamic(const std::string response)
+void testCompleteDynamic(const std::string& response)
 {
     opentrackio::OpenTrackIOSample sample;
     testSampleParse(response, sample);
@@ -230,25 +229,26 @@ void testCompleteDynamic(const std::string response)
     REQUIRE(sample.timing->sampleTimestamp->nanoseconds == 500000000);
     REQUIRE(sample.timing->sampleTimestamp->attoseconds == 0);
     REQUIRE(sample.timing->sequenceNumber == 0);
-    // TODO reenable these tests when example fixed
-    //REQUIRE(sample.timing->synchronization->frequency.numerator == 24000);
-    //REQUIRE(sample.timing->synchronization->frequency.denominator == 1001);
+    REQUIRE(sample.timing->synchronization->frequency->numerator == 24000);
+    REQUIRE(sample.timing->synchronization->frequency->denominator == 1001);
     REQUIRE(sample.timing->synchronization->locked);
     REQUIRE(sample.timing->synchronization->source == opentrackio::opentrackioproperties::Timing::Synchronization::SourceType::PTP);
-    REQUIRE(sample.timing->synchronization->offsets->translation == 1.0);
-    REQUIRE(sample.timing->synchronization->offsets->rotation == 2.0);
-    REQUIRE(sample.timing->synchronization->offsets->lensEncoders == 3.0);
     REQUIRE(sample.timing->synchronization->present);
+    REQUIRE(sample.timing->synchronization->ptp->profile == opentrackio::opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::SMPTE_ST2059_2_2021);
     REQUIRE(sample.timing->synchronization->ptp->domain == 1);
-    REQUIRE(sample.timing->synchronization->ptp->master == "00:11:22:33:44:55");
-    REQUIRE(sample.timing->synchronization->ptp->offset == 0.0);
+    REQUIRE(sample.timing->synchronization->ptp->leaderIdentity == "00:11:22:33:44:55");
+    REQUIRE(sample.timing->synchronization->ptp->leaderPriorities->priority1 == 128);
+    REQUIRE(sample.timing->synchronization->ptp->leaderPriorities->priority2 == 128);
+    REQUIRE(sample.timing->synchronization->ptp->leaderAccuracy == 5e-08);
+    REQUIRE(sample.timing->synchronization->ptp->meanPathDelay == 0.000123);
+    REQUIRE(sample.timing->synchronization->ptp->vlan == 100);
+    REQUIRE(sample.timing->synchronization->ptp->timeSource == "GNSS");
     REQUIRE(sample.timing->timecode->hours == 1);
     REQUIRE(sample.timing->timecode->minutes == 2);
     REQUIRE(sample.timing->timecode->seconds == 3);
     REQUIRE(sample.timing->timecode->frames == 4);
-    REQUIRE(sample.timing->timecode->format.frameRate.numerator == 24000);
+    REQUIRE(sample.timing->timecode->format.frameRate.numerator == 24'000);
     REQUIRE(sample.timing->timecode->format.frameRate.denominator == 1001);
-    REQUIRE(sample.timing->timecode->format.subFrame == 0);
 
     REQUIRE(sample.tracker->notes == "Example generated sample.");
     REQUIRE(sample.tracker->recording == false);
@@ -273,7 +273,6 @@ void testCompleteDynamic(const std::string response)
     REQUIRE(sample.transforms->transforms[1].scale->y == 2.0);
     REQUIRE(sample.transforms->transforms[1].scale->z == 3.0);
     REQUIRE(sample.transforms->transforms[1].id == "Crane Arm");
-    REQUIRE(sample.transforms->transforms[1].parentId == "Dolly");
     REQUIRE(sample.transforms->transforms[2].translation.x == 1.0);
     REQUIRE(sample.transforms->transforms[2].translation.y == 2.0);
     REQUIRE(sample.transforms->transforms[2].translation.z == 3.0);
@@ -284,10 +283,9 @@ void testCompleteDynamic(const std::string response)
     REQUIRE(sample.transforms->transforms[2].scale->y == 2.0);
     REQUIRE(sample.transforms->transforms[2].scale->z == 3.0);
     REQUIRE(sample.transforms->transforms[2].id == "Camera");
-    REQUIRE(sample.transforms->transforms[2].parentId == "Crane Arm");
 }
 
-void testCompleteStatic(const std::string response)
+void testCompleteStatic(const std::string& response)
 {
     opentrackio::OpenTrackIOSample sample;
     testSampleParse(response, sample);
@@ -300,7 +298,7 @@ void testCompleteStatic(const std::string response)
     REQUIRE(sample.camera->make == "CameraMaker");
     REQUIRE(sample.camera->model == "Model20");
     REQUIRE(sample.camera->serialNumber == "1234567890A");
-    REQUIRE(sample.camera->captureFrameRate->numerator == 24000);
+    REQUIRE(sample.camera->captureFrameRate->numerator == 24'000);
     REQUIRE(sample.camera->captureFrameRate->denominator == 1001);
     REQUIRE(sample.camera->fdlLink->substr(0, 9) == "urn:uuid:");
     REQUIRE(sample.camera->isoSpeed == 4000);
@@ -315,10 +313,66 @@ void testCompleteStatic(const std::string response)
     REQUIRE(sample.lens->nominalFocalLength == 14);
     REQUIRE(sample.lens->serialNumber == "1234567890A");
 
+    REQUIRE(sample.timing->synchronization->locked == true);
+    REQUIRE(sample.timing->synchronization->source == opentrackio::opentrackioproperties::Timing::Synchronization::SourceType::PTP);
+    REQUIRE(sample.timing->synchronization->frequency->numerator == 24'000);
+    REQUIRE(sample.timing->synchronization->frequency->denominator == 1001);
+    REQUIRE(sample.timing->synchronization->present == true);
+
+    REQUIRE(sample.timing->synchronization->ptp->profile == opentrackio::opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::SMPTE_ST2059_2_2021);
+    REQUIRE(sample.timing->synchronization->ptp->domain == 1);
+    REQUIRE(sample.timing->synchronization->ptp->leaderIdentity == "00:11:22:33:44:55");
+    REQUIRE(sample.timing->synchronization->ptp->leaderPriorities->priority1 == 128);
+    REQUIRE(sample.timing->synchronization->ptp->leaderPriorities->priority2 == 128);
+    REQUIRE(sample.timing->synchronization->ptp->leaderAccuracy == 5e-08);
+    REQUIRE(sample.timing->synchronization->ptp->meanPathDelay == 0.000123);
+    REQUIRE(sample.timing->synchronization->ptp->vlan == 100);
+    REQUIRE(sample.timing->synchronization->ptp->timeSource == "GNSS");
+
+    REQUIRE(sample.timing->timecode->hours == 1);
+    REQUIRE(sample.timing->timecode->minutes == 2);
+    REQUIRE(sample.timing->timecode->seconds == 3);
+    REQUIRE(sample.timing->timecode->frames == 4);
+    REQUIRE(sample.timing->timecode->format.frameRate.numerator == 24'000);
+    REQUIRE(sample.timing->timecode->format.frameRate.denominator == 1001);
+
+    REQUIRE(sample.tracker->notes == "Example generated sample.");
+    REQUIRE(sample.tracker->recording == false);
+    REQUIRE(sample.tracker->slate == "A101_A_4");
+    REQUIRE(sample.tracker->status == "Optical Good");
     REQUIRE(sample.tracker->firmwareVersion == "1.2.3");
     REQUIRE(sample.tracker->make == "TrackerMaker");
     REQUIRE(sample.tracker->model == "Tracker");
     REQUIRE(sample.tracker->serialNumber == "1234567890A");
+
+    REQUIRE(sample.transforms->transforms.size() == 3);
+    REQUIRE(sample.transforms->transforms[0].translation.x == 1.0);
+    REQUIRE(sample.transforms->transforms[0].translation.y == 2.0);
+    REQUIRE(sample.transforms->transforms[0].translation.z == 3.0);
+    REQUIRE(sample.transforms->transforms[0].rotation.pan == 180.0);
+    REQUIRE(sample.transforms->transforms[0].rotation.tilt == 90.0);
+    REQUIRE(sample.transforms->transforms[0].rotation.roll == 45.0);
+    REQUIRE(sample.transforms->transforms[0].id == "Dolly");
+    REQUIRE(sample.transforms->transforms[1].translation.x == 1.0);
+    REQUIRE(sample.transforms->transforms[1].translation.y == 2.0);
+    REQUIRE(sample.transforms->transforms[1].translation.z == 3.0);
+    REQUIRE(sample.transforms->transforms[1].rotation.pan == 180.0);
+    REQUIRE(sample.transforms->transforms[1].rotation.tilt == 90.0);
+    REQUIRE(sample.transforms->transforms[1].rotation.roll == 45.0);
+    REQUIRE(sample.transforms->transforms[1].scale->x == 1.0);
+    REQUIRE(sample.transforms->transforms[1].scale->y == 2.0);
+    REQUIRE(sample.transforms->transforms[1].scale->z == 3.0);
+    REQUIRE(sample.transforms->transforms[1].id == "Crane Arm");
+    REQUIRE(sample.transforms->transforms[2].translation.x == 1.0);
+    REQUIRE(sample.transforms->transforms[2].translation.y == 2.0);
+    REQUIRE(sample.transforms->transforms[2].translation.z == 3.0);
+    REQUIRE(sample.transforms->transforms[2].rotation.pan == 180.0);
+    REQUIRE(sample.transforms->transforms[2].rotation.tilt == 90.0);
+    REQUIRE(sample.transforms->transforms[2].rotation.roll == 45.0);
+    REQUIRE(sample.transforms->transforms[2].scale->x == 1.0);
+    REQUIRE(sample.transforms->transforms[2].scale->y == 2.0);
+    REQUIRE(sample.transforms->transforms[2].scale->z == 3.0);
+    REQUIRE(sample.transforms->transforms[2].id == "Camera");
 }
 
 TEST_CASE("OpenTrackIOSample example initialisation", "[init]")

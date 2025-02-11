@@ -403,8 +403,8 @@ namespace opentrackio::opentrackioproperties
                 };
                 std::optional<LeaderPriorities> leaderPriorities = std::nullopt;
 
-                std::optional<uint32_t> leaderAccuracy = std::nullopt;
-                std::optional<uint32_t> meanPathDelay = std::nullopt;
+                std::optional<double> leaderAccuracy = std::nullopt;
+                std::optional<double> meanPathDelay = std::nullopt;
                 std::optional<int32_t> vlan = std::nullopt;
                 std::optional<std::string> timeSource = std::nullopt;
             };

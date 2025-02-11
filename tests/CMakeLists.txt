@@ -1,4 +1,4 @@
-# Copyright 2024 Mo-Sys Engineering Ltd
+# Copyright 2025 Mo-Sys Engineering Ltd
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
 # to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 # distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
@@ -50,10 +50,12 @@ endif()
 
 # Json validator
 FetchContent_Declare(nlohmann_json_schema_validator
-  GIT_REPOSITORY https://github.com/pboettch/json-schema-validator
-  GIT_PROGRESS TRUE  GIT_SHALLOW TRUE
-  GIT_TAG 2.3.0)
-
+        GIT_REPOSITORY https://github.com/pboettch/json-schema-validator
+        GIT_PROGRESS TRUE
+        GIT_SHALLOW TRUE
+        GIT_TAG 2.3.0
+)
+set(nlohmann_json_schema_validator_SHARED_LIBS OFF CACHE BOOL "Build nlohmann_json_schema_validator as a static library" FORCE)
 FetchContent_MakeAvailable(nlohmann_json_schema_validator)
 
 # Compile
@@ -79,15 +81,18 @@ target_sources(tests
         ../src/OpenTrackIOSample.cpp
 )
 
+find_package(CURL REQUIRED)
+
 # Linkage
 target_link_libraries(tests
     PRIVATE
         Catch2::Catch2WithMain
         ssl
         crypto
-        CURL::libcurl_static
+        CURL::libcurl
         nlohmann_json_schema_validator
 )
+
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_link_libraries(tests PRIVATE opentrackio-cppd.lib)
     # Post-build copy debug dlls

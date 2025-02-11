@@ -129,7 +129,7 @@ namespace opentrackio
         m_json = j;
     }
 
-    void OpenTrackIOSample::parseCameraToJson(nlohmann::json& baseJson) const
+    void OpenTrackIOSample::parseCameraToJson(nlohmann::json& baseJson)
     {
         if (!camera.has_value())
         {
@@ -190,8 +190,7 @@ namespace opentrackio
         assignJson(baseJson["static"]["lens"], "model", lens->model);
         assignJson(baseJson["static"]["lens"], "nominalFocalLength", lens->nominalFocalLength);
         assignJson(baseJson["static"]["lens"], "serialNumber", lens->serialNumber);
-        // TODO this key will become distortionIsProjection
-        assignJson(baseJson["static"]["lens"], "distortionProjection", lens->distortionIsProjection);
+        assignJson(baseJson["static"]["lens"], "distortionIsProjection", lens->distortionIsProjection);
         assignJson(baseJson["static"]["lens"], "distortionOverscanMax", lens->distortionOverscanMax);
         assignJson(baseJson["static"]["lens"], "undistortionOverscanMax", lens->undistortionOverscanMax);
 
@@ -363,7 +362,7 @@ namespace opentrackio
 
                 if (ptp.profile.has_value())
                 {
-                    switch (ptp.profile)
+                    switch (ptp.profile.value())
                     {
                         case opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::IEEE_Std_1588_2019:
                             baseJson["timing"]["synchronization"]["profile"] = "IEEE Std 1588-2019";
@@ -405,7 +404,7 @@ namespace opentrackio
         }
     }
 
-    void OpenTrackIOSample::parseTrackerToJson(nlohmann::json& baseJson) const
+    void OpenTrackIOSample::parseTrackerToJson(nlohmann::json& baseJson)
     {
         if (!tracker.has_value())
         {
@@ -425,7 +424,7 @@ namespace opentrackio
         assignJson(baseJson["tracker"], "status", tracker->status);
     }    
     
-    void OpenTrackIOSample::parseTransformsToJson(nlohmann::json& baseJson) const
+    void OpenTrackIOSample::parseTransformsToJson(nlohmann::json& baseJson)
     {
         if (!transforms.has_value())
         {

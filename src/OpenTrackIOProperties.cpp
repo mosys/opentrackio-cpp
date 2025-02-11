@@ -176,8 +176,7 @@ namespace opentrackio::opentrackioproperties
             OpenTrackIOHelpers::assignField(lensJson, "model", lens.model, "string", errors);
             OpenTrackIOHelpers::assignField(lensJson, "nominalFocalLength", lens.nominalFocalLength, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "serialNumber", lens.serialNumber, "string", errors);
-            // TODO this key will become distortionIsProjection
-            OpenTrackIOHelpers::assignField(lensJson, "distortionProjection", lens.distortionIsProjection, "double", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "distortionIsProjection", lens.distortionIsProjection, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "distortionOverscanMax", lens.distortionOverscanMax, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "undistortionOverscanMax", lens.undistortionOverscanMax, "double", errors);
 
@@ -622,11 +621,11 @@ namespace opentrackio::opentrackioproperties
             {
                 outSync.ptp->leaderPriorities = Synchronization::Ptp::LeaderPriorities{};
                 OpenTrackIOHelpers::assignField(ptpJson["leaderPriorities"], "priority1", outSync.ptp->leaderPriorities->priority1, "uint8", errors);
-                OpenTrackIOHelpers::assignField(ptpJson["leaderPriorities"], "priority2", outSync.ptp->leaderPriorities->priority1, "uint8", errors);
+                OpenTrackIOHelpers::assignField(ptpJson["leaderPriorities"], "priority2", outSync.ptp->leaderPriorities->priority2, "uint8", errors);
             }
 
-            OpenTrackIOHelpers::assignField(ptpJson, "leaderAccuracy", outSync.ptp->leaderAccuracy, "uint32", errors);
-            OpenTrackIOHelpers::assignField(ptpJson, "meanPathDelay", outSync.ptp->meanPathDelay, "uint32", errors);
+            OpenTrackIOHelpers::assignField(ptpJson, "leaderAccuracy", outSync.ptp->leaderAccuracy, "double", errors);
+            OpenTrackIOHelpers::assignField(ptpJson, "meanPathDelay", outSync.ptp->meanPathDelay, "double", errors);
             OpenTrackIOHelpers::assignField(ptpJson, "vlan", outSync.ptp->vlan, "uint32", errors);
             OpenTrackIOHelpers::assignField(ptpJson, "timeSource", outSync.ptp->timeSource, "uint32", errors);
 
