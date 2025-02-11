@@ -19,6 +19,7 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
   GIT_TAG        v3.4.0 # or a later release
 )
+set(CATCH_BUILD_SHARED ON CACHE BOOL "Build Catch2 as a shared library" FORCE)
 FetchContent_MakeAvailable(Catch2)
 
 # OpenSSL - for Curl
