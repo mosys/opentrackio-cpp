@@ -1,5 +1,5 @@
 /**
- * Copyright 2024 Mo-Sys Engineering Ltd
+ * Copyright 2025 Mo-Sys Engineering Ltd
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), 
  * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, 
  * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
@@ -382,12 +382,31 @@ namespace opentrackio::opentrackioproperties
             std::optional<Offsets> offsets = std::nullopt;
             
             std::optional<bool> present = std::nullopt;
-            
-            struct Ptp 
+
+            struct Ptp
             {
-                std::optional<std::string> master = std::nullopt;
-                std::optional<double> offset = std::nullopt;
-                std::optional<uint16_t> domain = std::nullopt;                
+                enum class ProfileType
+                {
+                    IEEE_Std_1588_2019,    // "IEEE Std 1588-2019"
+                    IEEE_Std_802_1AS_2020, // "IEEE Std 802.1AS-2020"
+                    SMPTE_ST2059_2_2021    // "SMPTE ST2059-2:2021"
+                };
+                std::optional<ProfileType> profile;
+
+                std::optional<uint16_t> domain = std::nullopt;
+                std::optional<std::string> leaderIdentity = std::nullopt;
+
+                struct LeaderPriorities
+                {
+                    std::optional<uint8_t> priority1 = std::nullopt;
+                    std::optional<uint8_t> priority2 = std::nullopt;
+                };
+                std::optional<LeaderPriorities> leaderPriorities = std::nullopt;
+
+                std::optional<double> leaderAccuracy = std::nullopt;
+                std::optional<double> meanPathDelay = std::nullopt;
+                std::optional<int32_t> vlan = std::nullopt;
+                std::optional<std::string> timeSource = std::nullopt;
             };
             std::optional<Ptp> ptp = std::nullopt;
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2024 Mo-Sys Engineering Ltd
+ * Copyright 2025 Mo-Sys Engineering Ltd
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), 
  * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, 
  * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
@@ -12,7 +12,6 @@
  */
 
 #include "opentrackio-cpp/OpenTrackIOSample.h"
-#include <numbers>
 #include <format>
 
 namespace opentrackio 
@@ -191,8 +190,7 @@ namespace opentrackio
         assignJson(baseJson["static"]["lens"], "model", lens->model);
         assignJson(baseJson["static"]["lens"], "nominalFocalLength", lens->nominalFocalLength);
         assignJson(baseJson["static"]["lens"], "serialNumber", lens->serialNumber);
-        // TODO this key will become distortionIsProjection
-        assignJson(baseJson["static"]["lens"], "distortionProjection", lens->distortionIsProjection);
+        assignJson(baseJson["static"]["lens"], "distortionIsProjection", lens->distortionIsProjection);
         assignJson(baseJson["static"]["lens"], "distortionOverscanMax", lens->distortionOverscanMax);
         assignJson(baseJson["static"]["lens"], "undistortionOverscanMax", lens->undistortionOverscanMax);
 
@@ -332,7 +330,7 @@ namespace opentrackio
                 baseJson["timing"]["synchronization"]["frequency"]["denom"] = timing->synchronization->frequency->denominator;
             }
             baseJson["timing"]["synchronization"]["locked"] = timing->synchronization->locked;
-            switch(timing->synchronization->source)
+            switch (timing->synchronization->source)
             {
                 case opentrackioproperties::Timing::Synchronization::SourceType::GEN_LOCK:
                     baseJson["timing"]["synchronization"]["source"] = "genlock";
@@ -361,9 +359,36 @@ namespace opentrackio
             if (timing->synchronization->ptp.has_value())
             {
                 const auto& ptp = timing->synchronization->ptp.value();
-                assignJson(baseJson["timing"]["synchronization"]["ptp"], "master", ptp.master);
-                assignJson(baseJson["timing"]["synchronization"]["ptp"], "offset", ptp.offset);
-                assignJson(baseJson["timing"]["synchronization"]["ptp"], "domain", ptp.domain);                
+
+                if (ptp.profile.has_value())
+                {
+                    switch (ptp.profile.value())
+                    {
+                        case opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::IEEE_Std_1588_2019:
+                            baseJson["timing"]["synchronization"]["profile"] = "IEEE Std 1588-2019";
+                            break;
+                        case opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::IEEE_Std_802_1AS_2020:
+                            baseJson["timing"]["synchronization"]["profile"] = "IEEE Std 802.1AS-2020";
+                            break;
+                        case opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::SMPTE_ST2059_2_2021:
+                            baseJson["timing"]["synchronization"]["profile"] = "SMPTE ST2059-2:2021";
+                    }
+                }
+
+                assignJson(baseJson["timing"]["synchronization"]["ptp"], "domain", ptp.domain);
+                assignJson(baseJson["timing"]["synchronization"]["ptp"], "leaderIdentity", ptp.leaderIdentity);
+
+                if (ptp.leaderPriorities.has_value())
+                {
+                    const auto& [priority1, priority2] = ptp.leaderPriorities.value();
+                    assignJson(baseJson["timing"]["synchronization"]["ptp"]["leaderPriorities"], "priority1", priority1);
+                    assignJson(baseJson["timing"]["synchronization"]["ptp"]["leaderPriorities"], "priority2", priority2);
+                }
+
+                assignJson(baseJson["timing"]["synchronization"]["ptp"], "leaderAccuracy", ptp.leaderAccuracy);
+                assignJson(baseJson["timing"]["synchronization"]["ptp"], "meanPathDelay", ptp.meanPathDelay);
+                assignJson(baseJson["timing"]["synchronization"]["ptp"], "vlan", ptp.vlan);
+                assignJson(baseJson["timing"]["synchronization"]["ptp"], "timeSource", ptp.timeSource);
             }
         }
 
