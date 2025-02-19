@@ -23,12 +23,12 @@ namespace opentrackio::opentrackiotypes
 {
     struct Rational
     {
-        int64_t numerator = 0;
-        int64_t denominator = 0;
+        uint32_t numerator = 0;
+        uint32_t denominator = 0;
 
         Rational() = default;
 
-        Rational(int64_t n, int64_t d) : numerator{n}, denominator{d}
+        Rational(uint32_t n, uint32_t d) : numerator{n}, denominator{d}
         {};
         
         static std::optional<Rational> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors)
@@ -128,18 +128,13 @@ namespace opentrackio::opentrackiotypes
         uint8_t minutes = 0;
         uint8_t seconds = 0;
         uint8_t frames = 0;
-        
-        struct Format
-        {
-            Rational frameRate{};
-            std::optional<int> subFrame = std::nullopt;
-        };
-        Format format{};
+        Rational frameRate{};
+        std::optional<uint32_t> subFrame = std::nullopt;
         
         Timecode() = default;
-
-        Timecode(uint8_t h, uint8_t m, uint8_t s, uint8_t f, Format fmt)
-                : hours{h}, minutes{m}, seconds{s}, frames{f}, format{fmt} {};
+        Timecode(uint8_t h, uint8_t m, uint8_t s, uint8_t f, Rational fr, std::optional<uint32_t> sf = std::nullopt)
+                : hours{h}, minutes{m}, seconds{s}, frames{f}, frameRate{fr}, subFrame{sf}
+        {};
 
         static std::optional<Timecode> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors)
         {
@@ -149,40 +144,23 @@ namespace opentrackio::opentrackiotypes
             std::optional<uint8_t> minutes = std::nullopt;
             std::optional<uint8_t> seconds = std::nullopt;
             std::optional<uint8_t> frames = std::nullopt;
+            const std::optional<Rational> frameRate = Rational::parse(tcJson, fieldStr, errors);
 
             OpenTrackIOHelpers::assignField(tcJson, "hours", hours, "uint8", errors);
             OpenTrackIOHelpers::assignField(tcJson, "minutes", minutes, "uint8", errors);
             OpenTrackIOHelpers::assignField(tcJson, "seconds", seconds, "uint8", errors);
             OpenTrackIOHelpers::assignField(tcJson, "frames", frames, "uint8", errors);
 
-            if (!hours.has_value() || !minutes.has_value() || !seconds.has_value() || !frames.has_value())
+            if (!hours.has_value() || !minutes.has_value() || !seconds.has_value() || !frames.has_value() || !frameRate.has_value())
             {
                 errors.emplace_back("field: timing/timecode is missing required fields");
                 return std::nullopt;
             }
 
-            const bool formatFieldValid =
-                    tcJson["format"].contains("frameRate") &&
-                    tcJson["format"]["frameRate"].contains("num") &&
-                    tcJson["format"]["frameRate"].contains("denom");
+            std::optional<int> subFrame;
+            OpenTrackIOHelpers::assignField(tcJson["format"], "subFrame", subFrame, "uint32", errors);
 
-            if (!formatFieldValid)
-            {
-                errors.emplace_back("field: timing/timecode/format is missing required fields");
-                return std::nullopt;
-            }
-
-            auto fr = Rational::parse(tcJson["format"], "frameRate", errors);
-            std::optional<int> sub;
-
-            if (!fr.has_value())
-            {
-                return std::nullopt;
-            }
-
-            OpenTrackIOHelpers::assignField(tcJson["format"], "subFrame", sub, "int", errors);
-
-            return Timecode{hours.value(), minutes.value(), seconds.value(), frames.value(), Format{fr.value(), sub}};
+            return Timecode{hours.value(), minutes.value(), seconds.value(), frames.value(), frameRate.value(), subFrame.value()};
         }
     };
 
@@ -190,12 +168,10 @@ namespace opentrackio::opentrackiotypes
     {
         uint64_t seconds = 0;
         uint32_t nanoseconds = 0;
-        uint32_t attoseconds = 0;
 
         Timestamp() = default;
 
-        Timestamp(uint64_t s, uint32_t n, uint32_t a) : seconds{s}, nanoseconds{n}, attoseconds{a}
-        {};
+        Timestamp(uint64_t s, uint32_t n) : seconds{s}, nanoseconds{n} {};
 
         static std::optional<Timestamp> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors)
         {
@@ -203,11 +179,9 @@ namespace opentrackio::opentrackiotypes
 
             std::optional<uint64_t> seconds = std::nullopt;
             std::optional<uint32_t> nanoseconds = std::nullopt;
-            std::optional<uint32_t> attoseconds = std::nullopt;
 
             OpenTrackIOHelpers::assignField(tsJson, "seconds", seconds, "uint64", errors);
-            OpenTrackIOHelpers::assignField(tsJson, "nanoseconds", nanoseconds, "uint32_t", errors);
-            OpenTrackIOHelpers::assignField(tsJson, "attoseconds", attoseconds, "uint32_t", errors);
+            OpenTrackIOHelpers::assignField(tsJson, "nanoseconds", nanoseconds, "uint32", errors);
 
             if (!seconds.has_value() || !nanoseconds.has_value())
             {
@@ -215,7 +189,7 @@ namespace opentrackio::opentrackiotypes
                 return std::nullopt;
             }
 
-            return Timestamp(seconds.value(), nanoseconds.value(), attoseconds.value_or(0));
+            return Timestamp(seconds.value(), nanoseconds.value());
         }
     };
 
@@ -238,8 +212,8 @@ namespace opentrackio::opentrackiotypes
             std::optional<T> width = std::nullopt;
             std::optional<T> height = std::nullopt;
 
-            OpenTrackIOHelpers::assignField(dimJson, "width", width, "number", errors);
-            OpenTrackIOHelpers::assignField(dimJson, "height", height, "number", errors);
+            OpenTrackIOHelpers::assignField(dimJson, "width", width, "double", errors);
+            OpenTrackIOHelpers::assignField(dimJson, "height", height, "double", errors);
 
             if (!width.has_value() || !height.has_value())
             {
@@ -257,7 +231,6 @@ namespace opentrackio::opentrackiotypes
         Rotation rotation{};
         std::optional<Vector3> scale = std::nullopt;
         std::optional<std::string> id = std::nullopt;
-        std::optional<std::string> parentId = std::nullopt;
 
         Transform() = default;
 
@@ -298,7 +271,6 @@ namespace opentrackio::opentrackiotypes
             }
             
             OpenTrackIOHelpers::assignField(json, "id", tf.id, "string", errors);
-            OpenTrackIOHelpers::assignField(json, "parentId", tf.parentId, "string", errors);
 
             return tf;
         }

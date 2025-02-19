@@ -19,27 +19,36 @@
 #include "OpenTrackIOTypes.h"
 
 #define OPEN_TRACK_IO_PROTOCOL_NAME "OpenTrackIO"
-#define OPEN_TRACK_IO_PROTOCOL_MAJOR_VERSION 0
-#define OPEN_TRACK_IO_PROTOCOL_MINOR_VERSION 9
-#define OPEN_TRACK_IO_PROTOCOL_PATCH         1
+#define OPEN_TRACK_IO_PROTOCOL_MAJOR_VERSION 1
+#define OPEN_TRACK_IO_PROTOCOL_MINOR_VERSION 0
+#define OPEN_TRACK_IO_PROTOCOL_PATCH         0
 
 namespace opentrackio::opentrackioproperties
 {
+    /** Duration of the clip.
+    * Unit: Seconds */
+    struct Duration
+    {
+        opentrackiotypes::Rational rational{};
+
+        static std::optional<Duration> parse(nlohmann::json& json, std::vector<std::string>& errors);
+    };
+
     struct Camera
     {
         /**
-         *  Active area of the camera sensor.
-         *  Units: Microns */
+         * Active area of the camera sensor.
+         * Units: Millimeters */
         std::optional<opentrackiotypes::Dimensions<double>> activeSensorPhysicalDimensions = std::nullopt;
 
         /**
          * Photosite resolution of the active area of the camera sensor.
-         *  Units: Pixels */
+         * Units: Pixels */
         std::optional<opentrackiotypes::Dimensions<uint32_t>> activeSensorResolution = std::nullopt;
 
         /**
-         * Nominal ratio of height to width of the image of an axis-aligned square captured by the camera sensor. 
-         * It can be used to de-squeeze images but is not however an exact number over the entire captured area due 
+         * Nominal ratio of height to width of the image of an axis-aligned square captured by the camera sensor.
+         * It can be used to de-squeeze images but is not however an exact number over the entire captured area due
          * to a lens' intrinsic analog nature. */
         std::optional<opentrackiotypes::Rational> anamorphicSqueeze = std::nullopt;
 
@@ -65,7 +74,7 @@ namespace opentrackio::opentrackioproperties
 
         /**
          * Capture frame rate of the camera
-         *  Units: Hertz */
+         * Units: Hertz */
         std::optional<opentrackiotypes::Rational> captureFrameRate = std::nullopt;
 
         /**
@@ -86,19 +95,11 @@ namespace opentrackio::opentrackioproperties
         static std::optional<Camera> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
 
-    /** Duration of the clip.
-     * Unit: Seconds */
-    struct Duration
-    {
-        opentrackiotypes::Rational rational{};
-        
-        static std::optional<Duration> parse(nlohmann::json& json, std::vector<std::string>& errors);
-    };
-
     /**
      * Position of the stage origin in global ENU and geodetic coordinates
      * (E, N, U, lat0, lon0, h0). Note this may be dynamic e.g. if the stage is inside
-     * a moving vehicle. */
+     * a moving vehicle.
+     * Units: Meters */
     struct GlobalStage
     {
         double e;
@@ -114,7 +115,7 @@ namespace opentrackio::opentrackioproperties
     struct Lens
     {
         /**
-         * This list provides optional custom additonal coefficients for a
+         * This list provides optional custom additional coefficients for a
          * particular lens model. The meaning of which would require negotiation
          * between a particular producer and consumer. */
         std::optional<std::vector<double>> custom = std::nullopt;
@@ -132,30 +133,36 @@ namespace opentrackio::opentrackioproperties
         std::optional<std::vector<Distortion>> distortion = std::nullopt;
 
         /**
-         * Indicator that the OpenLensIO distortion model is the Projection
-           Characterization, not the Field-Of-View Characterization. This is
-           primarily relevant when storing overscan values, not in transmission
-           as the overscan should be calculated by the consumer. */
-        std::optional<bool> distortionIsProjection = std::nullopt;
-
-        /**
-         * Overscan factor on lens distortion */
+        * Overscan factor on lens distortion. Overscan may be provided by the producer
+        * but can also be overriden or calculated by the consumer.
+        * Note this should be the maximum of both projection-matrix-based and
+        * field-of-view-based rendering as per the OpenLensIO documentation. */
         std::optional<double> distortionOverscan = std::nullopt;
 
         /**
-         * Static maximum overscan factor on lens distortion. */
+         * Static maximum overscan factor on lens distortion. This is alternative
+         * to providing dynamic overscan values each frame.
+         * Note it should be the maximum of both projection-matrix-based and field-of-view-based
+         * rendering as per the OpenLensIO documentation. */
         std::optional<double> distortionOverscanMax = std::nullopt;
+
         /**
-         * Overscan factor on lens undistortion */
+         * Overscan factor on lens undistortion. Overscan may be provided by the producer
+         * but can also be overriden or calculated by the consumer.
+         * Note this should be the maximum of both projection-matrix-based and field-of-view-based
+         * rendering as per the OpenLensIO documentation. */
         std::optional<double> undistortionOverscan = std::nullopt;
 
         /**
-         * Static maximum overscan factor on lens undistortion. */
+        * Static maximum overscan factor on lens undistortion.
+        * This is alternative to providing dynamic overscan values each frame.
+        * Note it should be the maximum of both projection-matrix-based and field-of-view-based
+        * rendering as per the OpenLensIO documentation. */
         std::optional<double> undistortionOverscanMax = std::nullopt;
 
         /**
          * Shift in X and Y of the centre of distortion of the virtual camera
-         * Units: millimeters */
+         * Units: Millimeters */
         struct DistortionOffset
         {
             double x;
@@ -181,7 +188,8 @@ namespace opentrackio::opentrackioproperties
         
         /**
          * Offset of the entrance pupil relative to the nominal imaging plane (positive if the entrance pupil is 
-         * located on the side of the nominal imaging plane that is towards the object, and negative otherwise) */
+         * located on the side of the nominal imaging plane that is towards the object, and negative otherwise)
+         * Units: Meters */
         std::optional<double> entrancePupilOffset = std::nullopt;
 
         /**
@@ -197,19 +205,19 @@ namespace opentrackio::opentrackioproperties
         /**
          * The linear f-number of the lens, equal to the focal length divided by the diameter of the entrance pupil. */
         std::optional<double> fStop = std::nullopt;
+
+        /**
+         * Distance between the pinhole and the image plane in the simple CGI pinhole camera model.
+           Units: Millimeters */
+        std::optional<double> pinholeFocalLength = std::nullopt;
      
         /**
          * Non-blank string identifying lens firmware version. */
         std::optional<std::string> firmwareVersion = std::nullopt;
 
         /**
-         * Focal length of the lens
-         * Units: millimeter */
-        std::optional<double> focalLength = std::nullopt;
-
-        /**
-         * Focus distance / position of the lens
-         * Units: millimeter */
+         * Focus distance/position of the lens.
+         * Units: Meters */
         std::optional<double> focusDistance = std::nullopt;
 
         /**
@@ -222,12 +230,17 @@ namespace opentrackio::opentrackioproperties
 
         /**
          * Nominal focal length of the lens.
-         * The number printed on the side of a prime lens, e.g. 50 mm, and undefined in the case of a zoom lens. */
+         * The number printed on the side of a prime lens, e.g. 50 mm,
+         * and undefined in the case of a zoom lens.
+         * Units: millimeters */
         std::optional<double> nominalFocalLength = std::nullopt;
+
+        /** List of free strings that describe the history of calibrations of the lens */
+        std::optional<std::vector<std::string>> calibrationHistory = std::nullopt;
 
         /**
          * Offset in X and Y of the centre of perspective projection of the virtual camera
-         * Units: millimeters */
+         * Units: Millimeters */
         struct ProjectionOffset
         {
             double x;
@@ -240,9 +253,9 @@ namespace opentrackio::opentrackioproperties
          * before any homing / ranging has taken place. */
         struct RawEncoders
         {
-            std::optional<uint16_t> focus = std::nullopt;
-            std::optional<uint16_t> iris = std::nullopt;
-            std::optional<uint16_t> zoom = std::nullopt;
+            std::optional<uint32_t> focus = std::nullopt;
+            std::optional<uint32_t> iris = std::nullopt;
+            std::optional<uint32_t> zoom = std::nullopt;
         };
         std::optional<RawEncoders> rawEncoders = std::nullopt;
 
@@ -266,7 +279,7 @@ namespace opentrackio::opentrackioproperties
 
         /**
          * Version as integers e.g. 1.0.0 */
-        std::vector<int> version;
+        std::vector<uint16_t> version;
 
         static std::optional<Protocol> parse(nlohmann::json& json, std::vector<std::string>& errors);
     };
@@ -274,9 +287,8 @@ namespace opentrackio::opentrackioproperties
     struct RelatedSampleIds
     {
         /**
-         * List of sample unique IDs that are related to this sample.
-         * E.g. a related performance capture sample or a sample of static data from the same device.
-         * The existence of the related sample should not be relied upon.
+         * List of sampleId properties of samples related to this sample.
+         * The existence of a sample with a given sampleId is not guaranteed
          * Pattern: ^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ */
         std::vector<std::string> samples;
 
@@ -296,7 +308,7 @@ namespace opentrackio::opentrackioproperties
     struct SourceId
     {
         /**
-         * URN serving as unique identifier of the source from which data is being transported.
+         * URN serving as unique identifier of the source from which data is being transported
          * pattern: ^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ */
         std::string id;
 
@@ -306,8 +318,8 @@ namespace opentrackio::opentrackioproperties
     struct SourceNumber
     {
         /**
-	     * Number that identifies the index of the stream from a source from which data is being transported. 
-         * This is most important in the case where a source is producing multiple streams of samples. */
+	     * Number that identifies the index of the stream from a source from which data is being transported.
+	     * This is most important in the case where a source is producing multiple streams of samples. */
         uint32_t value;
 
         static std::optional<SourceNumber> parse(nlohmann::json& json, std::vector<std::string>& errors);
@@ -316,14 +328,14 @@ namespace opentrackio::opentrackioproperties
     struct Timing
     {
         /**
-         * Sample frame rate as a rational number. Drop frame rates such as 29.97 should be represented as 
-         * e.g. 30000/1001. In a variable rate system this should is estimated from the last sample delta time */
+        * Sample frame rate as a rational number. Drop frame rates such as 29.97 should be represented
+        * as e.g. 30000/1001. In a variable rate system this should be estimated from the last sample delta time. */
         std::optional<opentrackiotypes::Rational> sampleRate = std::nullopt;
          
         /**
-         * Enumerated value indicating whether the sample transport mechanism provides inherent ('external') timing, 
-         * or whether the transport mechanism lacks inherent timing and so the sample must contain a PTP timestamp 
-         * itself ('internal') to carry timing information. */
+        * Enumerated value indicating whether the sample transport mechanism provides inherent ('external') timing,
+        * or whether the transport mechanism lacks inherent timing and so the sample must contain a PTP timestamp
+        * itself ('internal') to carry timing information. */
         enum class Mode
         {
             EXTERNAL,
@@ -338,14 +350,14 @@ namespace opentrackio::opentrackioproperties
         std::optional<opentrackiotypes::Timestamp> recordedTimestamp = std::nullopt;
         
         /**
-         * PTP timestamp of the data capture instant. Note this may differ from the packet's transmission PTP timestamp. 
-         * The timestamp comprises a 48-bit unsigned integer (seconds), a 32-bit unsigned integer (nanoseconds), 
-         * and an optional 32-bit unsigned integer (attoseconds). */
+        * PTP timestamp of the data capture instant. Note this may differ from the packet's transmission
+        * PTP timestamp. The timestamp comprises a 48-bit unsigned integer (seconds),
+        * a 32-bit unsigned integer (nanoseconds) */
         std::optional<opentrackiotypes::Timestamp> sampleTimestamp = std::nullopt;
-        
+
         /**
          * Integer incrementing with each sample. */
-        std::optional<uint16_t> sequenceNumber = std::nullopt;
+        std::optional<uint32_t> sequenceNumber = std::nullopt;
 
          /**
           * Object describing how the tracking device is synchronized for this sample. 
@@ -391,20 +403,20 @@ namespace opentrackio::opentrackioproperties
                     IEEE_Std_802_1AS_2020, // "IEEE Std 802.1AS-2020"
                     SMPTE_ST2059_2_2021    // "SMPTE ST2059-2:2021"
                 };
-                std::optional<ProfileType> profile;
+                ProfileType profile = ProfileType::SMPTE_ST2059_2_2021;
 
-                std::optional<uint16_t> domain = std::nullopt;
-                std::optional<std::string> leaderIdentity = std::nullopt;
+                uint16_t domain = 0;
+                std::string leaderIdentity;
 
                 struct LeaderPriorities
                 {
-                    std::optional<uint8_t> priority1 = std::nullopt;
-                    std::optional<uint8_t> priority2 = std::nullopt;
+                    uint8_t priority1 = 0;
+                    uint8_t priority2 = 0;
                 };
-                std::optional<LeaderPriorities> leaderPriorities = std::nullopt;
+                LeaderPriorities leaderPriorities;
 
-                std::optional<double> leaderAccuracy = std::nullopt;
-                std::optional<double> meanPathDelay = std::nullopt;
+                double leaderAccuracy = 0.0;
+                double meanPathDelay = 0.0;
                 std::optional<int32_t> vlan = std::nullopt;
                 std::optional<std::string> timeSource = std::nullopt;
             };
@@ -421,13 +433,12 @@ namespace opentrackio::opentrackioproperties
         };
         std::optional<Synchronization> synchronization = std::nullopt;
         
-        
         /**
-         * SMPTE timecode of the sample. Timecode is a standard for labeling individual frames of data in media systems 
-         * and is useful for inter-frame synchronization.  
-         * format.dropFrame: True if the frame rate is a drop-frame format such as 29.97 fps.  
-         * format.frameRate: The frame rate as a rational number. Drop frame rates such as 29.97 should be represented 
-         *                      as e.g. 30000/1001. Note the timecode frame rate may differ from the sample frequency */
+         * SMPTE timecode of the sample. Timecode is a standard for labeling individual frames of data in media
+         * systems and is useful for inter-frame synchronization. Frame rate is a rational number,
+         * allowing drop frame rates such as that colloquially called 29.97 to be represented exactly, as 30000/1001.
+         * The timecode frame rate may differ from the sample frequency. The zero-based sub-frame field allows
+         * for finer division of the frame, e.g. interlaced frames have two sub-frames, one per field. */
         std::optional<opentrackiotypes::Timecode> timecode = std::nullopt;
 
         static std::optional<Timing> parse(nlohmann::json& json, std::vector<std::string>& errors);

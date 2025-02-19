@@ -52,7 +52,6 @@ namespace opentrackio
         {
             json[field]["seconds"] = value->seconds;
             json[field]["nanoseconds"] = value->nanoseconds;
-            json[field]["attoseconds"] = value->attoseconds;
         }
     };
     
@@ -190,7 +189,6 @@ namespace opentrackio
         assignJson(baseJson["static"]["lens"], "model", lens->model);
         assignJson(baseJson["static"]["lens"], "nominalFocalLength", lens->nominalFocalLength);
         assignJson(baseJson["static"]["lens"], "serialNumber", lens->serialNumber);
-        assignJson(baseJson["static"]["lens"], "distortionIsProjection", lens->distortionIsProjection);
         assignJson(baseJson["static"]["lens"], "distortionOverscanMax", lens->distortionOverscanMax);
         assignJson(baseJson["static"]["lens"], "undistortionOverscanMax", lens->undistortionOverscanMax);
 
@@ -235,7 +233,6 @@ namespace opentrackio
         }
 
         assignJson(baseJson["lens"], "fStop", lens->fStop);
-        assignJson(baseJson["lens"], "focalLength", lens->focalLength);
         assignJson(baseJson["lens"], "focusDistance", lens->focusDistance);
 
         if (lens->projectionOffset.has_value())
@@ -353,40 +350,35 @@ namespace opentrackio
                 assignJson(baseJson["timing"]["synchronization"]["offsets"], "rotation", offsets.rotation);
                 assignJson(baseJson["timing"]["synchronization"]["offsets"], "lensEncoders", offsets.lensEncoders);
             }            
-            
+
             assignJson(baseJson["timing"]["synchronization"], "present", timing->synchronization->present);
-            
+
+            auto ptpJson = baseJson["timing"]["synchronization"]["ptp"];
             if (timing->synchronization->ptp.has_value())
             {
                 const auto& ptp = timing->synchronization->ptp.value();
-
-                if (ptp.profile.has_value())
+                switch (ptp.profile)
                 {
-                    switch (ptp.profile.value())
-                    {
-                        case opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::IEEE_Std_1588_2019:
-                            baseJson["timing"]["synchronization"]["profile"] = "IEEE Std 1588-2019";
-                            break;
-                        case opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::IEEE_Std_802_1AS_2020:
-                            baseJson["timing"]["synchronization"]["profile"] = "IEEE Std 802.1AS-2020";
-                            break;
-                        case opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::SMPTE_ST2059_2_2021:
-                            baseJson["timing"]["synchronization"]["profile"] = "SMPTE ST2059-2:2021";
-                    }
+                    case opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::IEEE_Std_1588_2019:
+                        ptpJson["profile"] = "IEEE Std 1588-2019";
+                        break;
+                    case opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::IEEE_Std_802_1AS_2020:
+                        ptpJson["profile"] = "IEEE Std 802.1AS-2020";
+                        break;
+                    case opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::SMPTE_ST2059_2_2021:
+                        ptpJson["profile"] = "SMPTE ST2059-2:2021";
                 }
 
-                assignJson(baseJson["timing"]["synchronization"]["ptp"], "domain", ptp.domain);
-                assignJson(baseJson["timing"]["synchronization"]["ptp"], "leaderIdentity", ptp.leaderIdentity);
+                ptpJson["domain"] = ptp.domain;
+                ptpJson["leaderIdentity"] = ptp.leaderIdentity;
 
-                if (ptp.leaderPriorities.has_value())
-                {
-                    const auto& [priority1, priority2] = ptp.leaderPriorities.value();
-                    assignJson(baseJson["timing"]["synchronization"]["ptp"]["leaderPriorities"], "priority1", priority1);
-                    assignJson(baseJson["timing"]["synchronization"]["ptp"]["leaderPriorities"], "priority2", priority2);
-                }
+                const auto& [priority1, priority2] = ptp.leaderPriorities;
+                ptpJson["leaderPriorities"]["priority1"] = priority1;
+                ptpJson["leaderPriorities"]["priority2"] = priority2;
 
-                assignJson(baseJson["timing"]["synchronization"]["ptp"], "leaderAccuracy", ptp.leaderAccuracy);
-                assignJson(baseJson["timing"]["synchronization"]["ptp"], "meanPathDelay", ptp.meanPathDelay);
+                ptpJson["leaderAccuracy"] = ptp.leaderAccuracy;
+                ptpJson["meanPathDelay"] = ptp.meanPathDelay;
+
                 assignJson(baseJson["timing"]["synchronization"]["ptp"], "vlan", ptp.vlan);
                 assignJson(baseJson["timing"]["synchronization"]["ptp"], "timeSource", ptp.timeSource);
             }
@@ -398,9 +390,9 @@ namespace opentrackio
             baseJson["timing"]["timecode"]["minutes"] = timing->timecode->minutes;
             baseJson["timing"]["timecode"]["seconds"] = timing->timecode->seconds;
             baseJson["timing"]["timecode"]["frames"] = timing->timecode->frames;
-            baseJson["timing"]["timecode"]["format"]["frameRate"]["num"] = timing->timecode->format.frameRate.numerator;
-            baseJson["timing"]["timecode"]["format"]["frameRate"]["denom"] = timing->timecode->format.frameRate.denominator;
-            assignJson(baseJson["timing"]["timecode"]["format"], "subFrame", timing->timecode->format.subFrame);
+            baseJson["timing"]["timecode"]["frameRate"]["num"] = timing->timecode->frameRate.numerator;
+            baseJson["timing"]["timecode"]["frameRate"]["denom"] = timing->timecode->frameRate.denominator;
+            assignJson(baseJson["timing"]["timecode"], "subFrame", timing->timecode->subFrame);
         }
     }
 
@@ -438,7 +430,6 @@ namespace opentrackio
             tfJson["translation"] = {{"x", tf.translation.x}, {"y", tf.translation.y}, {"z", tf.translation.z}};
             tfJson["rotation"] = {{"pan", tf.rotation.pan}, {"tilt", tf.rotation.tilt}, {"roll", tf.rotation.roll}};
             assignJson(tfJson, "id", tf.id);
-            assignJson(tfJson, "parentId", tf.parentId);
             if (tf.scale.has_value())
             {
                 tfJson["scale"] = {{"x", tf.scale->x}, {"y", tf.scale->y}, {"z", tf.scale->z}};
