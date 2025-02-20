@@ -65,7 +65,7 @@ To build and run the tests run `cmake -DCMAKE_BUILD_TYPE=<Debug/Release> -DOPENS
 
 The MIT License (MIT)
 
-Copyright (c) 2024 Mo-Sys Engineering Ltd
+Copyright (c) 2025 Mo-Sys Engineering Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
