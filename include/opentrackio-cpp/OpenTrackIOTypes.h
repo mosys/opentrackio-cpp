@@ -157,8 +157,9 @@ namespace opentrackio::opentrackiotypes
                 return std::nullopt;
             }
 
-            std::optional<int> subFrame;
-            OpenTrackIOHelpers::assignField(tcJson["format"], "subFrame", subFrame, "uint32", errors);
+            std::optional<uint32_t> subFrame;
+            OpenTrackIOHelpers::assignField(tcJson, "subFrame", subFrame, "uint32_t", errors);
+
             return Timecode{hours.value(), minutes.value(), seconds.value(), frames.value(), frameRate.value(), subFrame};
         }
     };

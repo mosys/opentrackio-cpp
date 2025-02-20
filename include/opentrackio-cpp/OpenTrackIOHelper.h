@@ -174,8 +174,8 @@ namespace opentrackio
     };
 
     template<>
-    inline void OpenTrackIOHelpers::assignField<std::vector<double>>(nlohmann::json &json, std::string_view fieldStr,
-                                                 std::optional<std::vector<double>> &field,
+    inline void OpenTrackIOHelpers::assignField<std::vector<std::string>>(nlohmann::json &json, std::string_view fieldStr,
+                                                 std::optional<std::vector<std::string>> &field,
                                                  std::string_view typeStr, std::vector<std::string> &errors)
     {
         if (!json.contains(fieldStr) || !json[fieldStr].is_array())
@@ -184,10 +184,10 @@ namespace opentrackio
             return;
         }
 
-        std::vector<double> vec{};
+        std::vector<std::string> vec{};
         if (!iterateJsonArrayAndPopulateVector(json[fieldStr], vec))
         {
-            errors.emplace_back("field: {} had elements not of type: double");
+            errors.emplace_back("field: {} had elements not of type: string");
             field = std::nullopt;
             return;
         }
