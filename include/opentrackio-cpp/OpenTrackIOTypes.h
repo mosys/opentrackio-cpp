@@ -144,7 +144,7 @@ namespace opentrackio::opentrackiotypes
             std::optional<uint8_t> minutes = std::nullopt;
             std::optional<uint8_t> seconds = std::nullopt;
             std::optional<uint8_t> frames = std::nullopt;
-            const std::optional<Rational> frameRate = Rational::parse(tcJson, fieldStr, errors);
+            const std::optional<Rational> frameRate = Rational::parse(tcJson, "frameRate", errors);
 
             OpenTrackIOHelpers::assignField(tcJson, "hours", hours, "uint8", errors);
             OpenTrackIOHelpers::assignField(tcJson, "minutes", minutes, "uint8", errors);
@@ -159,8 +159,7 @@ namespace opentrackio::opentrackiotypes
 
             std::optional<int> subFrame;
             OpenTrackIOHelpers::assignField(tcJson["format"], "subFrame", subFrame, "uint32", errors);
-
-            return Timecode{hours.value(), minutes.value(), seconds.value(), frames.value(), frameRate.value(), subFrame.value()};
+            return Timecode{hours.value(), minutes.value(), seconds.value(), frames.value(), frameRate.value(), subFrame};
         }
     };
 

@@ -88,7 +88,7 @@ bool getStringExample(const std::string& name, std::string& response)
     return getString(url, response);
 }
 
-void testVersion(const std::vector<int>& version)
+void testVersion(const std::vector<uint16_t>& version)
 {
     REQUIRE(version.size() == 3);
     REQUIRE(version[0] == OPEN_TRACK_IO_PROTOCOL_MAJOR_VERSION);
@@ -114,15 +114,31 @@ void testRecommendedDynamic(const std::string& response)
     opentrackio::OpenTrackIOSample sample;
     testSampleParse(response, sample);
 
+    REQUIRE(sample.tracker->notes == "Example generated sample.");
+    REQUIRE(sample.tracker->recording == false);
+    REQUIRE(sample.tracker->slate == "A101_A_4");
+    REQUIRE(sample.tracker->status == "Optical Good");
+
+    REQUIRE(sample.timing->mode == opentrackio::opentrackioproperties::Timing::Mode::EXTERNAL);
+    REQUIRE(sample.timing->sampleRate->numerator == 24'000);
+    REQUIRE(sample.timing->sampleRate->denominator == 1'001);
+    REQUIRE(sample.timing->timecode->hours == 1);
+    REQUIRE(sample.timing->timecode->minutes == 2);
+    REQUIRE(sample.timing->timecode->seconds == 3);
+    REQUIRE(sample.timing->timecode->frames == 4);
+    REQUIRE(sample.timing->timecode->frameRate.numerator == 24'000);
+    REQUIRE(sample.timing->timecode->frameRate.denominator == 1'001);
+
     REQUIRE(sample.lens->distortion->size() == 1);
     REQUIRE(sample.lens->distortion->at(0).radial == std::vector<double>{1.0, 2.0, 3.0});
     REQUIRE(sample.lens->distortion->at(0).tangential == std::vector<double>{1.0, 2.0});
+    REQUIRE(sample.lens->distortion->at(0).overscan == 3.1);
     REQUIRE(sample.lens->encoders->focus == 0.1);
     REQUIRE(sample.lens->encoders->iris == 0.2);
     REQUIRE(sample.lens->encoders->zoom == 0.3);
     REQUIRE(sample.lens->entrancePupilOffset == 0.123);
     REQUIRE(sample.lens->fStop == 4.0);
-    REQUIRE(sample.lens->focalLength == 24.305);
+    REQUIRE(sample.lens->pinholeFocalLength == 24.305);
     REQUIRE(sample.lens->focusDistance == 10.0);
     REQUIRE(sample.lens->projectionOffset->x == 0.1);
     REQUIRE(sample.lens->projectionOffset->y == 0.2);
@@ -133,21 +149,6 @@ void testRecommendedDynamic(const std::string& response)
     REQUIRE(sample.sampleId->id.substr(0, 9) == "urn:uuid:");
     REQUIRE(sample.sourceId->id.substr(0, 9) == "urn:uuid:");
     REQUIRE(sample.sourceNumber->value == 1);
-
-    REQUIRE(sample.timing->sampleRate->numerator == 24000);
-    REQUIRE(sample.timing->sampleRate->denominator == 1001);
-    REQUIRE(sample.timing->mode == opentrackio::opentrackioproperties::Timing::Mode::EXTERNAL);
-    REQUIRE(sample.timing->timecode->hours == 1);
-    REQUIRE(sample.timing->timecode->minutes == 2);
-    REQUIRE(sample.timing->timecode->seconds == 3);
-    REQUIRE(sample.timing->timecode->frames == 4);
-    REQUIRE(sample.timing->timecode->format.frameRate.numerator == 24000);
-    REQUIRE(sample.timing->timecode->format.frameRate.denominator == 1001);
-
-    REQUIRE(sample.tracker->notes == "Example generated sample.");
-    REQUIRE(sample.tracker->recording == false);
-    REQUIRE(sample.tracker->slate == "A101_A_4");
-    REQUIRE(sample.tracker->status == "Optical Good");
 
     REQUIRE(sample.transforms->transforms.size() == 1);
     REQUIRE(sample.transforms->transforms[0].translation.x == 1.0);
@@ -176,23 +177,50 @@ void testCompleteDynamic(const std::string& response)
     opentrackio::OpenTrackIOSample sample;
     testSampleParse(response, sample);
 
-    REQUIRE(sample.globalStage->e == 100.0);
-    REQUIRE(sample.globalStage->n == 200.0);
-    REQUIRE(sample.globalStage->u == 300.0);
-    REQUIRE(sample.globalStage->lat0 == 100.0);
-    REQUIRE(sample.globalStage->lon0 == 200.0);
-    REQUIRE(sample.globalStage->h0 == 300.0);
+    REQUIRE(sample.tracker->notes == "Example generated sample.");
+    REQUIRE(sample.tracker->recording == false);
+    REQUIRE(sample.tracker->slate == "A101_A_4");
+    REQUIRE(sample.tracker->status == "Optical Good");
+
+    REQUIRE(sample.timing->mode == opentrackio::opentrackioproperties::Timing::Mode::INTERNAL);
+    REQUIRE(sample.timing->recordedTimestamp->seconds == 1718806000);
+    REQUIRE(sample.timing->recordedTimestamp->nanoseconds == 500000000);
+    REQUIRE(sample.timing->sampleRate->numerator == 24'000);
+    REQUIRE(sample.timing->sampleRate->denominator == 1'001);
+    REQUIRE(sample.timing->sampleTimestamp->seconds == 1718806554);
+    REQUIRE(sample.timing->sampleTimestamp->nanoseconds == 500000000);
+    REQUIRE(sample.timing->sequenceNumber == 0);
+    REQUIRE(sample.timing->synchronization->locked);
+    REQUIRE(sample.timing->synchronization->source == opentrackio::opentrackioproperties::Timing::Synchronization::SourceType::PTP);
+    REQUIRE(sample.timing->synchronization->frequency->numerator == 24'000);
+    REQUIRE(sample.timing->synchronization->frequency->denominator == 1'001);
+    REQUIRE(sample.timing->synchronization->present);
+    REQUIRE(sample.timing->synchronization->ptp->profile == opentrackio::opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::SMPTE_ST2059_2_2021);
+    REQUIRE(sample.timing->synchronization->ptp->domain == 1);
+    REQUIRE(sample.timing->synchronization->ptp->leaderIdentity == "00:11:22:33:44:55");
+    REQUIRE(sample.timing->synchronization->ptp->leaderPriorities.priority1 == 128);
+    REQUIRE(sample.timing->synchronization->ptp->leaderPriorities.priority2 == 128);
+    REQUIRE(sample.timing->synchronization->ptp->leaderAccuracy == 5e-08);
+    REQUIRE(sample.timing->synchronization->ptp->leaderTimeSource == opentrackio::opentrackioproperties::Timing::Synchronization::Ptp::LeaderTimeSourceType::GNSS);
+    REQUIRE(sample.timing->synchronization->ptp->meanPathDelay == 0.000123);
+    REQUIRE(sample.timing->synchronization->ptp->vlan == 100);
+    REQUIRE(sample.timing->timecode->hours == 1);
+    REQUIRE(sample.timing->timecode->minutes == 2);
+    REQUIRE(sample.timing->timecode->seconds == 3);
+    REQUIRE(sample.timing->timecode->frames == 4);
+    REQUIRE(sample.timing->timecode->frameRate.numerator == 24'000);
+    REQUIRE(sample.timing->timecode->frameRate.denominator == 1'001);
 
     REQUIRE(sample.lens->custom->size() == 2);
     REQUIRE(sample.lens->custom == std::vector<double>{1.0, 2.0});
     REQUIRE(sample.lens->distortion->size() == 2);
+    REQUIRE(sample.lens->distortion->at(0).model == "Brown-Conrady U-D");
     REQUIRE(sample.lens->distortion->at(0).radial == std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0});
     REQUIRE(sample.lens->distortion->at(0).tangential == std::vector<double>{1.0, 2.0});
-    REQUIRE(sample.lens->distortion->at(0).model == "Brown-Conrady D-U");
+    REQUIRE(sample.lens->distortion->at(0).overscan == 3.0);
     REQUIRE(sample.lens->distortion->at(1).radial == std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0});
     REQUIRE(sample.lens->distortion->at(1).tangential == std::vector<double>{1.0, 2.0});
-    REQUIRE(sample.lens->distortion->at(1).model == "Brown-Conrady U-D");
-    REQUIRE(sample.lens->distortionOverscan == 1.1);
+    REQUIRE(sample.lens->distortion->at(1).overscan == 2.0);
     REQUIRE(sample.lens->distortionOffset->x == 1.0);
     REQUIRE(sample.lens->distortionOffset->y == 2.0);
     REQUIRE(sample.lens->encoders->focus == 0.1);
@@ -203,7 +231,7 @@ void testCompleteDynamic(const std::string& response)
     REQUIRE(sample.lens->exposureFalloff->a2 == 2.0);
     REQUIRE(sample.lens->exposureFalloff->a3 == 3.0);
     REQUIRE(sample.lens->fStop == 4.0);
-    REQUIRE(sample.lens->focalLength == 24.305);
+    REQUIRE(sample.lens->pinholeFocalLength == 24.305);
     REQUIRE(sample.lens->focusDistance == 10.0);
     REQUIRE(sample.lens->projectionOffset->x == 0.1);
     REQUIRE(sample.lens->projectionOffset->y == 0.2);
@@ -211,49 +239,23 @@ void testCompleteDynamic(const std::string& response)
     REQUIRE(sample.lens->rawEncoders->iris == 2000);
     REQUIRE(sample.lens->rawEncoders->zoom == 3000);
     REQUIRE(sample.lens->tStop == 4.1);
-    REQUIRE(sample.lens->undistortionOverscan == 1.2);
 
     REQUIRE(sample.protocol->name == OPEN_TRACK_IO_PROTOCOL_NAME);
     testVersion(sample.protocol->version);
+
+    REQUIRE(sample.sourceId->id.substr(0, 9) == "urn:uuid:");
+    REQUIRE(sample.sampleId->id.substr(0, 9) == "urn:uuid:");
+    REQUIRE(sample.sourceNumber->value == 1);
     REQUIRE(sample.relatedSampleIds->samples.size() == 2);
     REQUIRE(sample.relatedSampleIds->samples[0].substr(0, 9) == "urn:uuid:");
     REQUIRE(sample.relatedSampleIds->samples[1].substr(0, 9) == "urn:uuid:");
-    REQUIRE(sample.sampleId->id.substr(0, 9) == "urn:uuid:");
-    REQUIRE(sample.sourceId->id.substr(0, 9) == "urn:uuid:");
-    REQUIRE(sample.sourceNumber->value == 1);
 
-    REQUIRE(sample.timing->sampleRate->numerator == 24000);
-    REQUIRE(sample.timing->sampleRate->denominator == 1001);
-    REQUIRE(sample.timing->mode == opentrackio::opentrackioproperties::Timing::Mode::INTERNAL);
-    REQUIRE(sample.timing->sampleTimestamp->seconds == 1718806554);
-    REQUIRE(sample.timing->sampleTimestamp->nanoseconds == 500000000);
-    REQUIRE(sample.timing->sampleTimestamp->attoseconds == 0);
-    REQUIRE(sample.timing->sequenceNumber == 0);
-    REQUIRE(sample.timing->synchronization->frequency->numerator == 24000);
-    REQUIRE(sample.timing->synchronization->frequency->denominator == 1001);
-    REQUIRE(sample.timing->synchronization->locked);
-    REQUIRE(sample.timing->synchronization->source == opentrackio::opentrackioproperties::Timing::Synchronization::SourceType::PTP);
-    REQUIRE(sample.timing->synchronization->present);
-    REQUIRE(sample.timing->synchronization->ptp->profile == opentrackio::opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::SMPTE_ST2059_2_2021);
-    REQUIRE(sample.timing->synchronization->ptp->domain == 1);
-    REQUIRE(sample.timing->synchronization->ptp->leaderIdentity == "00:11:22:33:44:55");
-    REQUIRE(sample.timing->synchronization->ptp->leaderPriorities->priority1 == 128);
-    REQUIRE(sample.timing->synchronization->ptp->leaderPriorities->priority2 == 128);
-    REQUIRE(sample.timing->synchronization->ptp->leaderAccuracy == 5e-08);
-    REQUIRE(sample.timing->synchronization->ptp->meanPathDelay == 0.000123);
-    REQUIRE(sample.timing->synchronization->ptp->vlan == 100);
-    REQUIRE(sample.timing->synchronization->ptp->timeSource == "GNSS");
-    REQUIRE(sample.timing->timecode->hours == 1);
-    REQUIRE(sample.timing->timecode->minutes == 2);
-    REQUIRE(sample.timing->timecode->seconds == 3);
-    REQUIRE(sample.timing->timecode->frames == 4);
-    REQUIRE(sample.timing->timecode->format.frameRate.numerator == 24'000);
-    REQUIRE(sample.timing->timecode->format.frameRate.denominator == 1001);
-
-    REQUIRE(sample.tracker->notes == "Example generated sample.");
-    REQUIRE(sample.tracker->recording == false);
-    REQUIRE(sample.tracker->slate == "A101_A_4");
-    REQUIRE(sample.tracker->status == "Optical Good");
+    REQUIRE(sample.globalStage->e == 100.0);
+    REQUIRE(sample.globalStage->n == 200.0);
+    REQUIRE(sample.globalStage->u == 300.0);
+    REQUIRE(sample.globalStage->lat0 == 100.0);
+    REQUIRE(sample.globalStage->lon0 == 200.0);
+    REQUIRE(sample.globalStage->h0 == 300.0);
 
     REQUIRE(sample.transforms->transforms.size() == 3);
     REQUIRE(sample.transforms->transforms[0].translation.x == 1.0);
@@ -263,6 +265,7 @@ void testCompleteDynamic(const std::string& response)
     REQUIRE(sample.transforms->transforms[0].rotation.tilt == 90.0);
     REQUIRE(sample.transforms->transforms[0].rotation.roll == 45.0);
     REQUIRE(sample.transforms->transforms[0].id == "Dolly");
+
     REQUIRE(sample.transforms->transforms[1].translation.x == 1.0);
     REQUIRE(sample.transforms->transforms[1].translation.y == 2.0);
     REQUIRE(sample.transforms->transforms[1].translation.z == 3.0);
@@ -273,6 +276,7 @@ void testCompleteDynamic(const std::string& response)
     REQUIRE(sample.transforms->transforms[1].scale->y == 2.0);
     REQUIRE(sample.transforms->transforms[1].scale->z == 3.0);
     REQUIRE(sample.transforms->transforms[1].id == "Crane Arm");
+
     REQUIRE(sample.transforms->transforms[2].translation.x == 1.0);
     REQUIRE(sample.transforms->transforms[2].translation.y == 2.0);
     REQUIRE(sample.transforms->transforms[2].translation.z == 3.0);
@@ -290,24 +294,29 @@ void testCompleteStatic(const std::string& response)
     opentrackio::OpenTrackIOSample sample;
     testSampleParse(response, sample);
 
+    // Static properties.
+    REQUIRE(sample.duration->rational.numerator == 1);
+    REQUIRE(sample.duration->rational.denominator == 25);
+    REQUIRE(sample.camera->captureFrameRate->numerator == 24'000);
+    REQUIRE(sample.camera->captureFrameRate->denominator == 1'001);
     REQUIRE(sample.camera->activeSensorResolution->height == 2160);
     REQUIRE(sample.camera->activeSensorResolution->width == 3840);
     REQUIRE(sample.camera->anamorphicSqueeze->numerator == 1);
     REQUIRE(sample.camera->anamorphicSqueeze->denominator == 1);
-    REQUIRE(sample.camera->firmwareVersion == "1.2.3");
     REQUIRE(sample.camera->make == "CameraMaker");
     REQUIRE(sample.camera->model == "Model20");
     REQUIRE(sample.camera->serialNumber == "1234567890A");
-    REQUIRE(sample.camera->captureFrameRate->numerator == 24'000);
-    REQUIRE(sample.camera->captureFrameRate->denominator == 1001);
+    REQUIRE(sample.camera->firmwareVersion == "1.2.3");
+    REQUIRE(sample.camera->label == "A");
+    REQUIRE(sample.camera->anamorphicSqueeze->numerator == 1);
+    REQUIRE(sample.camera->anamorphicSqueeze->denominator == 1);
+    REQUIRE(sample.camera->isoSpeed == 4'000);
     REQUIRE(sample.camera->fdlLink->substr(0, 9) == "urn:uuid:");
-    REQUIRE(sample.camera->isoSpeed == 4000);
     REQUIRE(sample.camera->shutterAngle == 45.0);
 
     REQUIRE(sample.duration->rational.numerator == 1);
     REQUIRE(sample.duration->rational.denominator == 25);
 
-    REQUIRE(sample.lens->distortionIsProjection == true);
     REQUIRE(sample.lens->distortionOverscanMax == 1.2);
     REQUIRE(sample.lens->undistortionOverscanMax == 1.3);
     REQUIRE(sample.lens->nominalFocalLength == 14);
@@ -322,19 +331,19 @@ void testCompleteStatic(const std::string& response)
     REQUIRE(sample.timing->synchronization->ptp->profile == opentrackio::opentrackioproperties::Timing::Synchronization::Ptp::ProfileType::SMPTE_ST2059_2_2021);
     REQUIRE(sample.timing->synchronization->ptp->domain == 1);
     REQUIRE(sample.timing->synchronization->ptp->leaderIdentity == "00:11:22:33:44:55");
-    REQUIRE(sample.timing->synchronization->ptp->leaderPriorities->priority1 == 128);
-    REQUIRE(sample.timing->synchronization->ptp->leaderPriorities->priority2 == 128);
+    REQUIRE(sample.timing->synchronization->ptp->leaderPriorities.priority1 == 128);
+    REQUIRE(sample.timing->synchronization->ptp->leaderPriorities.priority2 == 128);
     REQUIRE(sample.timing->synchronization->ptp->leaderAccuracy == 5e-08);
     REQUIRE(sample.timing->synchronization->ptp->meanPathDelay == 0.000123);
     REQUIRE(sample.timing->synchronization->ptp->vlan == 100);
-    REQUIRE(sample.timing->synchronization->ptp->timeSource == "GNSS");
+    REQUIRE(sample.timing->synchronization->ptp->leaderTimeSource == opentrackio::opentrackioproperties::Timing::Synchronization::Ptp::LeaderTimeSourceType::GNSS);
 
     REQUIRE(sample.timing->timecode->hours == 1);
     REQUIRE(sample.timing->timecode->minutes == 2);
     REQUIRE(sample.timing->timecode->seconds == 3);
     REQUIRE(sample.timing->timecode->frames == 4);
-    REQUIRE(sample.timing->timecode->format.frameRate.numerator == 24'000);
-    REQUIRE(sample.timing->timecode->format.frameRate.denominator == 1001);
+    REQUIRE(sample.timing->timecode->frameRate.numerator == 24'000);
+    REQUIRE(sample.timing->timecode->frameRate.denominator == 1001);
 
     REQUIRE(sample.tracker->notes == "Example generated sample.");
     REQUIRE(sample.tracker->recording == false);

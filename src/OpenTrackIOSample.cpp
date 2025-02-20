@@ -207,9 +207,6 @@ namespace opentrackio
             baseJson["lens"]["distortion"].push_back(distJson);
         }
 
-        assignJson(baseJson["lens"], "distortionOverscan", lens->distortionOverscan);
-        assignJson(baseJson["lens"], "undistortionOverscan", lens->undistortionOverscan);
-
         if (lens->distortionOffset.has_value())
         {
             baseJson["lens"]["distortionOffset"]["x"] = lens->distortionOffset->x;
@@ -240,13 +237,10 @@ namespace opentrackio
             baseJson["lens"]["projectionOffset"]["x"] = lens->projectionOffset->x;
             baseJson["lens"]["projectionOffset"]["y"] = lens->projectionOffset->y;
         }
-        
-        if (lens->rawEncoders.has_value())
-        {
-            assignJson(baseJson["lens"]["rawEncoders"], "focus", lens->rawEncoders->focus);
-            assignJson(baseJson["lens"]["rawEncoders"], "iris", lens->rawEncoders->iris);
-            assignJson(baseJson["lens"]["rawEncoders"], "zoom", lens->rawEncoders->zoom);
-        }
+
+        assignJson(baseJson["lens"]["rawEncoders"], "focus", lens->rawEncoders->focus);
+        assignJson(baseJson["lens"]["rawEncoders"], "iris", lens->rawEncoders->iris);
+        assignJson(baseJson["lens"]["rawEncoders"], "zoom", lens->rawEncoders->zoom);
         
         assignJson(baseJson["lens"], "tStop", lens->tStop);
     }
@@ -379,8 +373,22 @@ namespace opentrackio
                 ptpJson["leaderAccuracy"] = ptp.leaderAccuracy;
                 ptpJson["meanPathDelay"] = ptp.meanPathDelay;
 
-                assignJson(baseJson["timing"]["synchronization"]["ptp"], "vlan", ptp.vlan);
-                assignJson(baseJson["timing"]["synchronization"]["ptp"], "timeSource", ptp.timeSource);
+                assignJson(ptpJson, "vlan", ptp.vlan);
+
+                if (ptp.leaderTimeSource.has_value())
+                {
+                    switch (ptp.leaderTimeSource.value())
+                    {
+                        case opentrackioproperties::Timing::Synchronization::Ptp::LeaderTimeSourceType::GNSS:
+                            ptpJson["leaderTimeSource"] = "GNSS";
+                        break;
+                        case opentrackioproperties::Timing::Synchronization::Ptp::LeaderTimeSourceType::Atomic_clock:
+                            ptpJson["leaderTimeSource"] = "Atomic clock";
+                        break;
+                        case opentrackioproperties::Timing::Synchronization::Ptp::LeaderTimeSourceType::NTP:
+                            ptpJson["leaderTimeSource"] = "NTP";
+                    }
+                }
             }
         }
 

@@ -202,29 +202,26 @@ namespace opentrackio::opentrackioproperties
                 {
                     std::optional<std::vector<double>> radial = std::nullopt;
                     std::optional<std::vector<double>> tangential = std::nullopt;
+                    std::optional<double> overscan = std::nullopt;
                     std::optional<std::string> model = std::nullopt;
 
                     OpenTrackIOHelpers::assignField(dist, "radial", radial, "double", errors);
                     OpenTrackIOHelpers::assignField(dist, "tangential", tangential, "double", errors);
                     OpenTrackIOHelpers::assignField(dist, "model", model, "string", errors);
+                    OpenTrackIOHelpers::assignField(dist, "overscan", overscan, "double", errors);
 
                     if (radial.has_value())
                     {
                         auto d = Distortion();
                         d.radial = std::move(radial.value());
                         d.tangential = std::move(tangential);
-                        if (dist.contains("model"))
-                        {
-                            d.model = dist["model"];
-                        }
+                        d.model = std::move(model);
+                        d.overscan = std::move(overscan);
                         lens.distortion->emplace_back(d);
                     }
                 }
                 lensJson.erase("distortion");
             }
-
-            OpenTrackIOHelpers::assignField(lensJson, "distortionOverscan", lens.distortionOverscan, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "undistortionOverscan", lens.undistortionOverscan, "double", errors);
 
             if (lensJson.contains("distortionOffset"))
             {
@@ -292,14 +289,10 @@ namespace opentrackio::opentrackioproperties
 
             if (lensJson.contains("rawEncoders"))
             {
-                std::optional<uint32_t> focus = std::nullopt;
-                std::optional<uint32_t> iris = std::nullopt;
-                std::optional<uint32_t> zoom = std::nullopt;
-
-                OpenTrackIOHelpers::assignField(lensJson["rawEncoders"], "focus", focus, "unit32", errors);
-                OpenTrackIOHelpers::assignField(lensJson["rawEncoders"], "iris", iris, "uint32", errors);
-                OpenTrackIOHelpers::assignField(lensJson["rawEncoders"], "zoom", zoom, "uint32", errors);
-
+                lens.rawEncoders = RawEncoders{};
+                OpenTrackIOHelpers::assignField(lensJson["rawEncoders"], "focus", lens.rawEncoders->focus, "unit32", errors);
+                OpenTrackIOHelpers::assignField(lensJson["rawEncoders"], "iris", lens.rawEncoders->iris, "uint32", errors);
+                OpenTrackIOHelpers::assignField(lensJson["rawEncoders"], "zoom", lens.rawEncoders->zoom, "uint32", errors);
                 lensJson.erase("rawEncoders");
             }
 
@@ -506,7 +499,7 @@ namespace opentrackio::opentrackioproperties
         
         if (timingJson.contains("synchronization"))
         {
-            timing.synchronization = parseSynchronization(timingJson["synchronization"], errors);
+            timing.synchronization = parseSynchronization(timingJson, errors);
             OpenTrackIOHelpers::clearFieldIfEmpty(timingJson, "synchronization");
         }
         
@@ -598,6 +591,8 @@ namespace opentrackio::opentrackioproperties
             }
             syncJson.erase("offsets");
         }
+
+        OpenTrackIOHelpers::assignField(syncJson, "present", outSync.present, "bool", errors);
 
         if (syncJson.contains("ptp"))
         {
@@ -696,11 +691,27 @@ namespace opentrackio::opentrackioproperties
             outSync.ptp->meanPathDelay = meanPathDelay.value();
 
             OpenTrackIOHelpers::assignField(ptpJson, "vlan", outSync.ptp->vlan, "uint32", errors);
-            OpenTrackIOHelpers::assignField(ptpJson, "timeSource", outSync.ptp->timeSource, "uint32", errors);
+
+            std::optional<std::string> leaderTimeSourceStr;
+            OpenTrackIOHelpers::assignField(ptpJson, "leaderTimeSource", leaderTimeSourceStr, "string", errors);
+            if (leaderTimeSourceStr.has_value())
+            {
+                if (leaderTimeSourceStr == "GNSS")
+                {
+                    outSync.ptp->leaderTimeSource = Synchronization::Ptp::LeaderTimeSourceType::GNSS;
+                }
+                else if (leaderTimeSourceStr == "Atomic clock")
+                {
+                    outSync.ptp->leaderTimeSource = Synchronization::Ptp::LeaderTimeSourceType::Atomic_clock;
+                }
+                else if (leaderTimeSourceStr == "NTP")
+                {
+                    outSync.ptp->leaderTimeSource = Synchronization::Ptp::LeaderTimeSourceType::NTP;
+                }
+            }
 
             json.erase("ptp");
         }
-        OpenTrackIOHelpers::assignField(json, "present", outSync.present, "bool", errors);
 
         return outSync;
     }

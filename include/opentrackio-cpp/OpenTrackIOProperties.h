@@ -129,6 +129,7 @@ namespace opentrackio::opentrackioproperties
             std::vector<double> radial{};
             std::optional<std::vector<double>> tangential = std::nullopt;
             std::optional<std::string> model = std::nullopt;
+            std::optional<double> overscan = std::nullopt;
         };
         std::optional<std::vector<Distortion>> distortion = std::nullopt;
 
@@ -418,7 +419,14 @@ namespace opentrackio::opentrackioproperties
                 double leaderAccuracy = 0.0;
                 double meanPathDelay = 0.0;
                 std::optional<int32_t> vlan = std::nullopt;
-                std::optional<std::string> timeSource = std::nullopt;
+
+                enum class LeaderTimeSourceType
+                {
+                    GNSS,         // "GNSS",
+                    Atomic_clock, // "Atomic clock",
+                    NTP           // "NTP"
+                };
+                std::optional<LeaderTimeSourceType> leaderTimeSource = std::nullopt;
             };
             std::optional<Ptp> ptp = std::nullopt;
 
@@ -497,7 +505,7 @@ namespace opentrackio::opentrackioproperties
      * provide the ability for cycles (with angles >360 or <0 degrees).
      * Where a tracking system is providing the pose of a virtual camera,
      * gimbal lock does not present the physical challenges of a robotic system.
-     * Conversion to and from quarternions is trivial with an acceptable loss of precision */
+     * Conversion to and from quaternions is trivial with an acceptable loss of precision */
     struct Transforms
     {
         std::vector<opentrackiotypes::Transform> transforms{};
