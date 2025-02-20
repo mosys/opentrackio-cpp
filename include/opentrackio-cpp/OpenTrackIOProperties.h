@@ -37,19 +37,19 @@ namespace opentrackio::opentrackioproperties
     struct Camera
     {
         /**
-        * Active area of the camera sensor.
+        * Height and width of the active area of the camera sensor in millimeters.
         * Units: Millimeters */
         std::optional<opentrackiotypes::Dimensions<double>> activeSensorPhysicalDimensions = std::nullopt;
 
         /**
-        * Photosite resolution of the active area of the camera sensor.
+        * Photosite resolution of the active area of the camera sensor in pixels.
         * Units: Pixels */
         std::optional<opentrackiotypes::Dimensions<uint32_t>> activeSensorResolution = std::nullopt;
 
         /**
-        * Nominal ratio of height to width of the image of an axis-aligned square captured by the camera sensor.
-        * It can be used to de-squeeze images but is not however an exact number over the entire captured area due
-        * to a lens' intrinsic analog nature. */
+        * Nominal ratio of height to width of the image of an axis-aligned square captured by the
+        * camera sensor. It can be used to de-squeeze images but is not however an exact number over
+        * the entire captured area due to a lens' intrinsic analog nature. */
         std::optional<opentrackiotypes::Rational> anamorphicSqueeze = std::nullopt;
 
         /**
@@ -87,7 +87,7 @@ namespace opentrackio::opentrackioproperties
         std::optional<uint32_t> isoSpeed = std::nullopt;
 
         /**
-        * Shutter speed as a fraction of the captured frame rate. The shutter speed (in units of 1/s)
+        * Shutter speed as a fraction of the capture frame rate. The shutter speed (in units of 1/s)
         * is equal to the value of the parameter divided by 360 times the capture frame rate.
         * Units: Degree */
         std::optional<double> shutterAngle = std::nullopt;
@@ -134,31 +134,15 @@ namespace opentrackio::opentrackioproperties
         std::optional<std::vector<Distortion>> distortion = std::nullopt;
 
         /**
-        * Overscan factor on lens distortion. Overscan may be provided by the producer
-        * but can also be overriden or calculated by the consumer.
-        * Note this should be the maximum of both projection-matrix-based and
+        * Static maximum overscan factor on lens distortion. This is an alternative to providing dynamic
+        * overscan values each frame. Note it should be the maximum of both projection-matrix-based and
         * field-of-view-based rendering as per the OpenLensIO documentation. */
-        std::optional<double> distortionOverscan = std::nullopt;
-
-        /**
-        * Static maximum overscan factor on lens distortion. This is alternative
-        * to providing dynamic overscan values each frame.
-        * Note it should be the maximum of both projection-matrix-based and field-of-view-based
-        * rendering as per the OpenLensIO documentation. */
         std::optional<double> distortionOverscanMax = std::nullopt;
 
         /**
-        * Overscan factor on lens undistortion. Overscan may be provided by the producer
-        * but can also be overriden or calculated by the consumer.
-        * Note this should be the maximum of both projection-matrix-based and field-of-view-based
-        * rendering as per the OpenLensIO documentation. */
-        std::optional<double> undistortionOverscan = std::nullopt;
-
-        /**
-        * Static maximum overscan factor on lens undistortion.
-        * This is alternative to providing dynamic overscan values each frame.
-        * Note it should be the maximum of both projection-matrix-based and field-of-view-based
-        * rendering as per the OpenLensIO documentation. */
+        * Static maximum overscan factor on lens undistortion. This is an alternative to providing dynamic
+        * overscan values each frame. Note it should be the maximum of both projection-matrix-based and
+        * field-of-view-based rendering as per the OpenLensIO documentation. */
         std::optional<double> undistortionOverscanMax = std::nullopt;
 
         /**
@@ -172,13 +156,14 @@ namespace opentrackio::opentrackioproperties
         std::optional<DistortionOffset> distortionOffset = std::nullopt;
 
         /**
-        * Normalised real numbers (0-1) for focus, iris and zoom. Encoders are represented in this way (as opposed to
-        * raw integer values) to ensure values remain independent of encoder resolution, minimum and maximum
-        * (at an acceptable loss of precision). These values are only relevant in lenses with end-stops that demarcate
-        * the 0 and 1 range. Value should be provided in the following directions (if known):
+        * Normalised real numbers (0-1) for focus, iris and zoom. Encoders are represented in this way
+        * (as opposed to raw integer values) to ensure values remain independent of encoder resolution,
+        * minimum and maximum (at an acceptable loss of precision). These values are only relevant in lenses with
+        * end-stops that demarcate the 0 and 1 range. Value should be provided in the following
+        * directions (if known):
         * Focus: 0=infinite, 1=closest
-        * Iris: 0=open, 1=closed
-        * Zoom: 0=wide angle, 1=telephoto. */
+        * Iris:  0=open, 1=closed
+        * Zoom:  0=wide-angle, 1=telephoto */
         struct Encoders
         {
             std::optional<double> focus = std::nullopt;
@@ -188,8 +173,9 @@ namespace opentrackio::opentrackioproperties
         std::optional<Encoders> encoders = std::nullopt;
         
         /**
-        * Offset of the entrance pupil relative to the nominal imaging plane (positive if the entrance pupil is
-        * located on the side of the nominal imaging plane that is towards the object, and negative otherwise)
+        * Offset of the entrance pupil relative to the nominal imaging plane (positive if the entrance pupil
+        * is located on the side of the nominal imaging plane that is towards the object, and negative otherwise).
+        * Measured in meters as in a render engine it is often applied in the virtual camera's transform chain.
         * Units: Meters */
         std::optional<double> entrancePupilOffset = std::nullopt;
 
@@ -233,7 +219,7 @@ namespace opentrackio::opentrackioproperties
         * Nominal focal length of the lens.
         * The number printed on the side of a prime lens, e.g. 50 mm,
         * and undefined in the case of a zoom lens.
-        * Units: millimeters */
+        * Units: Millimeters */
         std::optional<double> nominalFocalLength = std::nullopt;
 
         /** List of free strings that describe the history of calibrations of the lens */
@@ -251,7 +237,7 @@ namespace opentrackio::opentrackioproperties
 
         /**
         * Raw encoder values for focus, iris and zoom. These values are dependent on encoder resolution and
-        * before any homing / ranging has taken place. */
+        * before any homing/ranging has taken place. */
         struct RawEncoders
         {
             std::optional<uint32_t> focus = std::nullopt;
@@ -329,14 +315,15 @@ namespace opentrackio::opentrackioproperties
     struct Timing
     {
         /**
-        * Sample frame rate as a rational number. Drop frame rates such as 29.97 should be represented
-        * as e.g. 30000/1001. In a variable rate system this should be estimated from the last sample delta time. */
+        * Sample frame rate as a rational number. Drop frame rates such as 29.97 should be
+        * represented as e.g. 30000/1001. In a variable rate system this should
+        * be estimated from the last sample delta time. */
         std::optional<opentrackiotypes::Rational> sampleRate = std::nullopt;
          
         /**
-        * Enumerated value indicating whether the sample transport mechanism provides inherent ('external') timing,
-        * or whether the transport mechanism lacks inherent timing and so the sample must contain a PTP timestamp
-        * itself ('internal') to carry timing information. */
+        * Enumerated value indicating whether the sample transport mechanism provides inherent ('external')
+        * timing, or whether the transport mechanism lacks inherent timing and so the sample must contain a
+        * PTP timestamp itself ('internal') to carry timing information. */
         enum class Mode
         {
             EXTERNAL,
@@ -345,15 +332,16 @@ namespace opentrackio::opentrackioproperties
         std::optional<Mode> mode = std::nullopt;
 
         /**
-         * PTP timestamp of the data recording instant, provided for convenience during playback of e.g. pre-recorded 
-         * tracking data. The timestamp comprises a 48-bit unsigned integer (seconds), a 32-bit unsigned integer 
-         * (nanoseconds), and an optional 32-bit unsigned integer (attoseconds). */
+        * PTP timestamp of the data recording instant, provided for convenience
+        * during playback of e.g. pre-recorded tracking data. The timestamp comprises a 48-bit unsigned
+        * integer (seconds), a 32-bit unsigned integer (nanoseconds) */
         std::optional<opentrackiotypes::Timestamp> recordedTimestamp = std::nullopt;
         
         /**
         * PTP timestamp of the data capture instant. Note this may differ from the packet's transmission
-        * PTP timestamp. The timestamp comprises a 48-bit unsigned integer (seconds),
-        * a 32-bit unsigned integer (nanoseconds) */
+        * PTP timestamp. The timestamp comprises a 48-bit unsigned integer (seconds), a 32-bit unsigned
+        * integer (nanoseconds).
+        */
         std::optional<opentrackiotypes::Timestamp> sampleTimestamp = std::nullopt;
 
         /**
@@ -361,31 +349,23 @@ namespace opentrackio::opentrackioproperties
         std::optional<uint32_t> sequenceNumber = std::nullopt;
 
         /**
-        * Object describing how the tracking device is synchronized for this sample.
-        * frequency: The frequency of the synchronisation. This may differ from the sample frame rate for
-        *             example in a genlocked tracking device.
-        * locked: Is the tracking device locked to the synchronization source.
-        * offsets: Offsets in seconds between sync and sample. Critical for e.g. frame remapping,
-        *             or when using different data sources for position/rotation and lens encoding
-        * present: Is the synchronization source present (a synchronization source can be present
-        *             but not locked if frame rates differ for example)
-        * ptp: If the synchronization source is a PTP master, then this object contains:
-        *         - master: The MAC address of the PTP master
-        *                    pattern: ^([A-F0-9]{2}:){5}[A-F0-9]{2}$
-        *         - offset: The timing offset in seconds from the sample timestamp to the PTP timestamp
-        *         - domain: The PTP domain number
-        * source: The source of synchronization must be defined as one of the following:
-        *         - genlock: The tracking device has an external black/burst or tri-level analog sync signal
-        *                     that is triggering the capture of tracking samples
-        *         - videoIn: The tracking device has an external video signal that is triggering the capture of tracking samples
-        *         - ptp: The tracking device is locked to a PTP master
-        *         - ntp: The tracking device is locked to an NTP server */
-        struct Synchronization 
+        * Object describing how the tracking device is synchronized for this sample. */
+        struct Synchronization
         {
+            /**
+            * The frequency of a synchronization signal.This may differ from the sample
+            * frame rate for example in a gen-locked tracking device.
+            * This is not required if the synchronization source is PTP or NTP.*/
             std::optional<opentrackiotypes::Rational> frequency = std::nullopt;
-            
+
+            /**
+            * Is the tracking device locked to the synchronization source */
             bool locked;
 
+            /**
+            * Offsets in seconds between sync and sample. Critical for e.g. frame remapping, or when using
+            * different data sources for position/rotation and lens encoding.
+            */
             struct Offsets
             {
                 std::optional<double> translation = std::nullopt;
@@ -393,11 +373,20 @@ namespace opentrackio::opentrackioproperties
                 std::optional<double> lensEncoders = std::nullopt;
             };
             std::optional<Offsets> offsets = std::nullopt;
-            
+
+            /**
+            * Is the synchronization source present (a synchronization source can be present but
+            * not locked if frame rates differ for example). */
             std::optional<bool> present = std::nullopt;
 
+            /**
+            * If the synchronization source is a PTP leader. */
             struct Ptp
             {
+                /**
+                * Specifies the PTP profile in use. This defines the operational rules and parameters
+                * for synchronization. For example "SMPTE ST2059-2:2021" for SMPTE 2110 based systems,
+                * or "IEEE Std 1588-2019" or "IEEE Std 802.1AS-2020" for industrial applications. */
                 enum class ProfileType
                 {
                     IEEE_Std_1588_2019,    // "IEEE Std 1588-2019"
@@ -406,20 +395,45 @@ namespace opentrackio::opentrackioproperties
                 };
                 ProfileType profile = ProfileType::SMPTE_ST2059_2_2021;
 
+                /**
+                * Identifies the PTP domain the device belongs to.
+                * Devices in the same domain can synchronize with each other. */
                 uint16_t domain = 0;
+
+                /**
+                * The unique identifier (usually MAC address) of the current PTP leader (grandmaster). */
                 std::string leaderIdentity;
 
+                /**
+                * The priority values of the leader used in the Best Master Clock Algorithm (BMCA).
+                * Lower values indicate higher priority. */
                 struct LeaderPriorities
                 {
+                    /**
+                    * Static priority set by the administrator. */
                     uint8_t priority1 = 0;
+
+                    /**
+                    * Dynamic priority based on the leader's role or clock quality. */
                     uint8_t priority2 = 0;
                 };
                 LeaderPriorities leaderPriorities;
 
+                /**
+                * The timing offset in seconds from the sample timestamp to the PTP timestamp. */
                 double leaderAccuracy = 0.0;
+
+                /**
+                * The average round-trip delay between the device and the PTP leader.
+                * Units: Seconds */
                 double meanPathDelay = 0.0;
+
+                /**
+                * Integer representing the VLAN ID for PTP traffic (e.g., 100 for VLAN 100).  */
                 std::optional<int32_t> vlan = std::nullopt;
 
+                /**
+                * Indicates the leader's source of time, such as GNSS, atomic clock, or NTP. */
                 enum class LeaderTimeSourceType
                 {
                     GNSS,         // "GNSS",
@@ -430,12 +444,21 @@ namespace opentrackio::opentrackioproperties
             };
             std::optional<Ptp> ptp = std::nullopt;
 
+            /**
+            * The source of synchronization.
+            * genlock: The tracking device has an external black/burst or tri-level analog sync signal
+            *          that is triggering the capture of tracking samples.
+            * videoIn: The tracking device has an external video signal that is triggering the
+            *          capture of tracking samples.
+            * ptp:     The tracking device is locked to a PTP leader.
+            * ntp:     The tracking device is locked to an NTP server.
+             */
             enum class SourceType
             {
-                GEN_LOCK,
-                VIDEO_IN,
-                PTP,
-                NTP
+                GEN_LOCK, // "genlock"
+                VIDEO_IN, // "videoIn"
+                PTP,      // "ptp"
+                NTP       // "ntp"
             };
             SourceType source;
         };
@@ -444,9 +467,9 @@ namespace opentrackio::opentrackioproperties
         /**
         * SMPTE timecode of the sample. Timecode is a standard for labeling individual frames of data in media
         * systems and is useful for inter-frame synchronization. Frame rate is a rational number,
-        * allowing drop frame rates such as that colloquially called 29.97 to be represented exactly, as 30000/1001.
-        * The timecode frame rate may differ from the sample frequency. The zero-based sub-frame field allows
-        * for finer division of the frame, e.g. interlaced frames have two sub-frames, one per field. */
+        * allowing drop frame rates such as that colloquially called 29.97 to be represented exactly, as
+        * 30000/1001. The timecode frame rate may differ from the sample frequency. The zero-based sub-frame
+        * field allows for finer division of the frame, e.g. interlaced frames have two sub-frames, one per field. */
         std::optional<opentrackiotypes::Timecode> timecode = std::nullopt;
 
         static std::optional<Timing> parse(nlohmann::json& json, std::vector<std::string>& errors);
@@ -493,19 +516,19 @@ namespace opentrackio::opentrackioproperties
     };    
 
     /**
-    * A list of transforms. Transforms can have a name and parent that can be used to compose a transform hierarchy.
-    * In the case of multiple children their transforms should be processed in their order in the array.
-    * X,Y,Z in metres of camera sensor relative to stage origin.
-    * The Z axis points upwards and the coordinate system is right-handed.
-    * Y points in the forward camera direction (when pan, tilt and roll are zero).
-    * For example in an LED volume Y would point towards the centre of the LED wall and so X would point to camera-right.
-    * Rotation expressed as euler angles in degrees of the camera sensor relative to stage origin
-    * Rotations are intrinsic and are measured around the axes ZXY, commonly referred to as [pan, tilt, roll]
-    * Notes on Euler angles: Euler angles are human-readable and unlike quarternions,
-    * provide the ability for cycles (with angles >360 or <0 degrees).
-    * Where a tracking system is providing the pose of a virtual camera,
-    * gimbal lock does not present the physical challenges of a robotic system.
-    * Conversion to and from quaternions is trivial with an acceptable loss of precision */
+    * A list of transforms.
+    * Transforms are composed in order with the last in the list representing the X,Y,Z in meters of camera
+    * sensor relative to stage origin. The Z axis points upwards and the coordinate system is right-handed.
+    * Y points in the forward camera direction (when pan, tilt and roll are zero). For example in an LED volume
+    * Y would point towards the centre of the LED wall and so X would point to camera-right. Rotation expressed as
+    * euler angles in degrees of the camera sensor relative to stage origin Rotations are intrinsic and are measured
+    * around the axes ZXY, commonly referred to as [pan, tilt, roll].
+    * Notes on Euler angles: Euler angles are human-readable and unlike quaternions, provide the ability for cycles
+    * (with angles >360 or <0 degrees). Where a tracking system is providing the pose of a virtual camera, gimbal lock
+    * does not present the physical challenges of a robotic system. Conversion to and from quaternions is trivial
+    * with an acceptable loss of precision.
+    * Units: Meters/Degrees
+     */
     struct Transforms
     {
         std::vector<opentrackiotypes::Transform> transforms{};
