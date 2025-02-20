@@ -177,6 +177,7 @@ namespace opentrackio::opentrackioproperties
             OpenTrackIOHelpers::assignField(lensJson, "serialNumber", lens.serialNumber, "string", errors);
             OpenTrackIOHelpers::assignField(lensJson, "distortionOverscanMax", lens.distortionOverscanMax, "double", errors);
             OpenTrackIOHelpers::assignField(lensJson, "undistortionOverscanMax", lens.undistortionOverscanMax, "double", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "calibrationHistory", lens.calibrationHistory, "string", errors);
 
             OpenTrackIOHelpers::clearFieldIfEmpty(json["static"], "lens");
         }
@@ -666,6 +667,7 @@ namespace opentrackio::opentrackioproperties
                 errors.emplace_back("field: timing/synchronization/ptp/leaderPriorities is required, however it is missing a subfield(s).");
                 return std::nullopt;
             }
+            OpenTrackIOHelpers::clearFieldIfEmpty(ptpJson, leaderPrioritiesStr);
 
             outSync.ptp->leaderPriorities = Synchronization::Ptp::LeaderPriorities{
                 priority1.value(),
@@ -710,7 +712,7 @@ namespace opentrackio::opentrackioproperties
                 }
             }
 
-            json.erase("ptp");
+            OpenTrackIOHelpers::clearFieldIfEmpty(syncJson, "ptp");
         }
 
         return outSync;
