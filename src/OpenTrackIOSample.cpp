@@ -238,9 +238,12 @@ namespace opentrackio
             baseJson["lens"]["projectionOffset"]["y"] = lens->projectionOffset->y;
         }
 
-        assignJson(baseJson["lens"]["rawEncoders"], "focus", lens->rawEncoders->focus);
-        assignJson(baseJson["lens"]["rawEncoders"], "iris", lens->rawEncoders->iris);
-        assignJson(baseJson["lens"]["rawEncoders"], "zoom", lens->rawEncoders->zoom);
+        if (lens->rawEncoders.has_value())
+        {
+            assignJson(baseJson["lens"]["rawEncoders"], "focus", lens->rawEncoders->focus);
+            assignJson(baseJson["lens"]["rawEncoders"], "iris", lens->rawEncoders->iris);
+            assignJson(baseJson["lens"]["rawEncoders"], "zoom", lens->rawEncoders->zoom);
+        }
         
         assignJson(baseJson["lens"], "tStop", lens->tStop);
     }
