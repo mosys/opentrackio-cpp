@@ -476,6 +476,7 @@ namespace opentrackio::opentrackioproperties
         
     private:
         static std::optional<Synchronization> parseSynchronization(nlohmann::json& json, std::vector<std::string>& errors);
+        static std::optional<Synchronization::Ptp> parsePtp(nlohmann::json& json, std::vector<std::string>& errors);
     };
 
     struct Tracker

@@ -597,125 +597,132 @@ namespace opentrackio::opentrackioproperties
 
         if (syncJson.contains("ptp"))
         {
-            outSync.ptp = Synchronization::Ptp{};
-            auto& ptpJson = syncJson["ptp"];
-
-            std::optional<std::string> profileStr;
-            OpenTrackIOHelpers::assignField(ptpJson, "profile", profileStr, "string", errors);
-            bool successfullyAssignedProfileField = false;
-            if (profileStr.has_value())
-            {
-                successfullyAssignedProfileField = true;
-                if (profileStr == "IEEE Std 1588-2019")
-                {
-                    outSync.ptp->profile = Synchronization::Ptp::ProfileType::IEEE_Std_1588_2019;
-                }
-                else if (profileStr == "IEEE Std 802.1AS-2020")
-                {
-                    outSync.ptp->profile = Synchronization::Ptp::ProfileType::IEEE_Std_802_1AS_2020;
-                }
-                else if (profileStr == "SMPTE ST2059-2:2021")
-                {
-                    outSync.ptp->profile = Synchronization::Ptp::ProfileType::SMPTE_ST2059_2_2021;
-                }
-                else
-                {
-                    successfullyAssignedProfileField = false;
-                }
-            }
-            else
-            {
-                errors.emplace_back("field: timing/synchronization/ptp/profile is required, however it is missing.");
-                return std::nullopt;
-            }
-
-            if (!successfullyAssignedProfileField)
-            {
-                errors.emplace_back("field: profile has an invalid string value.");
-                return std::nullopt;
-            }
-            ptpJson.erase("profile");
-
-            std::optional<uint16_t> domain;
-            OpenTrackIOHelpers::assignField(ptpJson, "domain", domain, "uint16", errors);
-            if (!domain.has_value())
-            {
-                errors.emplace_back("field: timing/synchronization/ptp/domain is required, however it is missing.");
-                return std::nullopt;
-            }
-            outSync.ptp->domain = domain.value();
-
-            std::optional<std::string> leaderIdentity;
-            const std::regex pattern{R"((?:^[0-9a-f]{2}(?::[0-9a-f]{2}){5}$)|(?:^[0-9a-f]{2}(?:-[0-9a-f]{2}){5}$))"};
-            OpenTrackIOHelpers::assignRegexField(ptpJson, "leaderIdentity", leaderIdentity, pattern, errors);
-
-            if (!leaderIdentity.has_value())
-            {
-                errors.emplace_back("field: timing/synchronization/ptp/leaderIdentity is required, however it is missing.");
-                return std::nullopt;
-            }
-            outSync.ptp->leaderIdentity = leaderIdentity.value();
-
-            std::optional<uint8_t> priority1;
-            std::optional<uint8_t> priority2;
-            constexpr auto leaderPrioritiesStr = "leaderPriorities";
-            OpenTrackIOHelpers::assignField(ptpJson[leaderPrioritiesStr], "priority1", priority1, "uint8", errors);
-            OpenTrackIOHelpers::assignField(ptpJson[leaderPrioritiesStr], "priority2", priority2, "uint8", errors);
-
-            if (!priority1.has_value() || !priority2.has_value())
-            {
-                errors.emplace_back("field: timing/synchronization/ptp/leaderPriorities is required, however it is missing a subfield(s).");
-                return std::nullopt;
-            }
-            OpenTrackIOHelpers::clearFieldIfEmpty(ptpJson, leaderPrioritiesStr);
-
-            outSync.ptp->leaderPriorities = Synchronization::Ptp::LeaderPriorities{
-                priority1.value(),
-                priority2.value()
-            };
-
-            std::optional<double> leaderAccuracy;
-            OpenTrackIOHelpers::assignField(ptpJson, "leaderAccuracy", leaderAccuracy, "double", errors);
-            if (!leaderAccuracy.has_value())
-            {
-                errors.emplace_back("field: timing/synchronization/ptp/leaderAccuracy is required, however it is missing.");
-                return std::nullopt;
-            }
-            outSync.ptp->leaderAccuracy = leaderAccuracy.value();
-
-            std::optional<double> meanPathDelay;
-            OpenTrackIOHelpers::assignField(ptpJson, "meanPathDelay", meanPathDelay, "double", errors);
-            if (!meanPathDelay.has_value())
-            {
-                errors.emplace_back("field: timing/synchronization/ptp/meanPathDelay is required, however it is missing.");
-                return std::nullopt;
-            }
-            outSync.ptp->meanPathDelay = meanPathDelay.value();
-
-            OpenTrackIOHelpers::assignField(ptpJson, "vlan", outSync.ptp->vlan, "uint32", errors);
-
-            std::optional<std::string> leaderTimeSourceStr;
-            OpenTrackIOHelpers::assignField(ptpJson, "leaderTimeSource", leaderTimeSourceStr, "string", errors);
-            if (leaderTimeSourceStr.has_value())
-            {
-                if (leaderTimeSourceStr == "GNSS")
-                {
-                    outSync.ptp->leaderTimeSource = Synchronization::Ptp::LeaderTimeSourceType::GNSS;
-                }
-                else if (leaderTimeSourceStr == "Atomic clock")
-                {
-                    outSync.ptp->leaderTimeSource = Synchronization::Ptp::LeaderTimeSourceType::Atomic_clock;
-                }
-                else if (leaderTimeSourceStr == "NTP")
-                {
-                    outSync.ptp->leaderTimeSource = Synchronization::Ptp::LeaderTimeSourceType::NTP;
-                }
-            }
-
+            outSync.ptp = parsePtp(syncJson, errors);
             OpenTrackIOHelpers::clearFieldIfEmpty(syncJson, "ptp");
         }
 
         return outSync;
+    }
+
+    std::optional<Timing::Synchronization::Ptp>
+    Timing::parsePtp(nlohmann::json& json, std::vector<std::string>& errors)
+    {
+        Synchronization::Ptp outPtp{};
+        auto& ptpJson = json["ptp"];
+
+        std::optional<std::string> profileStr;
+        OpenTrackIOHelpers::assignField(ptpJson, "profile", profileStr, "string", errors);
+        bool successfullyAssignedProfileField = false;
+        if (profileStr.has_value())
+        {
+            successfullyAssignedProfileField = true;
+            if (profileStr == "IEEE Std 1588-2019")
+            {
+                outPtp.profile = Synchronization::Ptp::ProfileType::IEEE_Std_1588_2019;
+            }
+            else if (profileStr == "IEEE Std 802.1AS-2020")
+            {
+                outPtp.profile = Synchronization::Ptp::ProfileType::IEEE_Std_802_1AS_2020;
+            }
+            else if (profileStr == "SMPTE ST2059-2:2021")
+            {
+                outPtp.profile = Synchronization::Ptp::ProfileType::SMPTE_ST2059_2_2021;
+            }
+            else
+            {
+                successfullyAssignedProfileField = false;
+            }
+        }
+        else
+        {
+            errors.emplace_back("field: timing/synchronization/ptp/profile is required, however it is missing.");
+            return std::nullopt;
+        }
+
+        if (!successfullyAssignedProfileField)
+        {
+            errors.emplace_back("field: profile has an invalid string value.");
+            return std::nullopt;
+        }
+        ptpJson.erase("profile");
+
+        std::optional<uint16_t> domain;
+        OpenTrackIOHelpers::assignField(ptpJson, "domain", domain, "uint16", errors);
+        if (!domain.has_value())
+        {
+            errors.emplace_back("field: timing/synchronization/ptp/domain is required, however it is missing.");
+            return std::nullopt;
+        }
+        outPtp.domain = domain.value();
+
+        std::optional<std::string> leaderIdentity;
+        const std::regex pattern{R"((?:^[0-9a-f]{2}(?::[0-9a-f]{2}){5}$)|(?:^[0-9a-f]{2}(?:-[0-9a-f]{2}){5}$))"};
+        OpenTrackIOHelpers::assignRegexField(ptpJson, "leaderIdentity", leaderIdentity, pattern, errors);
+
+        if (!leaderIdentity.has_value())
+        {
+            errors.emplace_back("field: timing/synchronization/ptp/leaderIdentity is required, however it is missing.");
+            return std::nullopt;
+        }
+        outPtp.leaderIdentity = leaderIdentity.value();
+
+        std::optional<uint8_t> priority1;
+        std::optional<uint8_t> priority2;
+        constexpr auto leaderPrioritiesStr = "leaderPriorities";
+        OpenTrackIOHelpers::assignField(ptpJson[leaderPrioritiesStr], "priority1", priority1, "uint8", errors);
+        OpenTrackIOHelpers::assignField(ptpJson[leaderPrioritiesStr], "priority2", priority2, "uint8", errors);
+
+        if (!priority1.has_value() || !priority2.has_value())
+        {
+            errors.emplace_back("field: timing/synchronization/ptp/leaderPriorities is required, however it is missing a subfield(s).");
+            return std::nullopt;
+        }
+        OpenTrackIOHelpers::clearFieldIfEmpty(ptpJson, leaderPrioritiesStr);
+
+        outPtp.leaderPriorities = Synchronization::Ptp::LeaderPriorities{
+            priority1.value(),
+            priority2.value()
+        };
+
+        std::optional<double> leaderAccuracy;
+        OpenTrackIOHelpers::assignField(ptpJson, "leaderAccuracy", leaderAccuracy, "double", errors);
+        if (!leaderAccuracy.has_value())
+        {
+            errors.emplace_back("field: timing/synchronization/ptp/leaderAccuracy is required, however it is missing.");
+            return std::nullopt;
+        }
+        outPtp.leaderAccuracy = leaderAccuracy.value();
+
+        std::optional<double> meanPathDelay;
+        OpenTrackIOHelpers::assignField(ptpJson, "meanPathDelay", meanPathDelay, "double", errors);
+        if (!meanPathDelay.has_value())
+        {
+            errors.emplace_back("field: timing/synchronization/ptp/meanPathDelay is required, however it is missing.");
+            return std::nullopt;
+        }
+        outPtp.meanPathDelay = meanPathDelay.value();
+
+        OpenTrackIOHelpers::assignField(ptpJson, "vlan", outPtp.vlan, "uint32", errors);
+
+        std::optional<std::string> leaderTimeSourceStr;
+        OpenTrackIOHelpers::assignField(ptpJson, "leaderTimeSource", leaderTimeSourceStr, "string", errors);
+        if (leaderTimeSourceStr.has_value())
+        {
+            if (leaderTimeSourceStr == "GNSS")
+            {
+                outPtp.leaderTimeSource = Synchronization::Ptp::LeaderTimeSourceType::GNSS;
+            }
+            else if (leaderTimeSourceStr == "Atomic clock")
+            {
+                outPtp.leaderTimeSource = Synchronization::Ptp::LeaderTimeSourceType::Atomic_clock;
+            }
+            else if (leaderTimeSourceStr == "NTP")
+            {
+                outPtp.leaderTimeSource = Synchronization::Ptp::LeaderTimeSourceType::NTP;
+            }
+        }
+
+        return outPtp;
     }
 
     std::optional<Tracker> Tracker::parse(nlohmann::json &json, std::vector<std::string>& errors)
