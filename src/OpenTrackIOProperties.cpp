@@ -595,11 +595,11 @@ namespace opentrackio::opentrackioproperties
 
         OpenTrackIOHelpers::assignField(syncJson, "present", outSync.present, "bool", errors);
 
-        if (syncJson.contains("ptp"))
+        if (syncJson.contains("ptp") && outSync.source == Synchronization::SourceType::PTP)
         {
             outSync.ptp = parsePtp(syncJson, errors);
-            OpenTrackIOHelpers::clearFieldIfEmpty(syncJson, "ptp");
         }
+        OpenTrackIOHelpers::clearFieldIfEmpty(syncJson, "ptp");
 
         return outSync;
     }
