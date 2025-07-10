@@ -442,7 +442,7 @@ namespace opentrackio
             baseJson["timing"]["timecode"]["frameRate"]["num"] = timing->timecode->frameRate.numerator;
             baseJson["timing"]["timecode"]["frameRate"]["denom"] = timing->timecode->frameRate.denominator;
             assignJson(baseJson["timing"]["timecode"], "subFrame", timing->timecode->subFrame);
-            assignJson(baseJson["timing"]["timecode"]["dropFrame"], "dropFrame", timing->timecode->dropFrame);
+            assignJson(baseJson["timing"]["timecode"], "dropFrame", timing->timecode->dropFrame);
         }
     }
 
