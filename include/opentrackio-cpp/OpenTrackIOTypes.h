@@ -97,6 +97,10 @@ namespace opentrackio::opentrackiotypes
                 return std::nullopt;
             }
 
+            OpenTrackIOHelpers::getFieldFromJson(vecJson["x"],vec.x);
+            OpenTrackIOHelpers::getFieldFromJson(vecJson["y"], vec.y);
+            OpenTrackIOHelpers::getFieldFromJson(vecJson["z"], vec.z);
+
             return vec;
         }
     };
@@ -152,16 +156,23 @@ namespace opentrackio::opentrackiotypes
         uint8_t frames = 0;
         Rational frameRate{};
         std::optional<uint32_t> subFrame = std::nullopt;
+        std::optional<bool> dropFrame = std::nullopt;
 
         Timecode() = default;
 
-        Timecode(uint8_t h, uint8_t m, uint8_t s, uint8_t f, Rational fr, std::optional<uint32_t> sf = std::nullopt)
-            : hours{h},
-              minutes{m},
-              seconds{s},
-              frames{f},
-              frameRate{fr},
-              subFrame{sf}
+        Timecode(uint8_t h,
+                 uint8_t m,
+                 uint8_t s,
+                 uint8_t f,
+                 Rational fr,
+                 std::optional<uint32_t> sf = std::nullopt,
+                 std::optional<bool> df = std::nullopt): hours{h},
+                                                         minutes{m},
+                                                         seconds{s},
+                                                         frames{f},
+                                                         frameRate{fr},
+                                                         subFrame{sf},
+                                                         dropFrame{df}
         {
         };
 
@@ -192,13 +203,17 @@ namespace opentrackio::opentrackiotypes
             std::optional<uint32_t> subFrame;
             OpenTrackIOHelpers::assignField(tcJson, "subFrame", subFrame, "uint32_t", errors);
 
+            std::optional<bool> dropFrame;
+            OpenTrackIOHelpers::assignField(tcJson, "dropFrame", dropFrame, "boolean", errors);
+
             return Timecode{
                 hours.value(),
                 minutes.value(),
                 seconds.value(),
                 frames.value(),
                 frameRate.value(),
-                subFrame
+                subFrame,
+                dropFrame
             };
         }
     };

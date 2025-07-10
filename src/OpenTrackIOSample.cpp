@@ -97,7 +97,16 @@ namespace opentrackio
 
     bool OpenTrackIOSample::initialise(const std::string_view jsonString)
     {
-        const nlohmann::json from_string = nlohmann::json::parse(jsonString);
+        constexpr auto parseCallback = nullptr;
+        constexpr bool allowExceptions = false;
+        const nlohmann::json from_string = nlohmann::json::parse(jsonString, parseCallback, allowExceptions);
+
+        if (from_string.is_discarded())
+        {
+            m_errorMessages.emplace_back("Unable to initialise OpenTrackIO sample, JSON parse error.");
+            return false;
+        }
+
         return initialise(from_string);
     }
 
@@ -433,6 +442,7 @@ namespace opentrackio
             baseJson["timing"]["timecode"]["frameRate"]["num"] = timing->timecode->frameRate.numerator;
             baseJson["timing"]["timecode"]["frameRate"]["denom"] = timing->timecode->frameRate.denominator;
             assignJson(baseJson["timing"]["timecode"], "subFrame", timing->timecode->subFrame);
+            assignJson(baseJson["timing"]["timecode"]["dropFrame"], "dropFrame", timing->timecode->dropFrame);
         }
     }
 
