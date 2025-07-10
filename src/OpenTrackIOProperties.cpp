@@ -141,6 +141,7 @@ namespace opentrackio::opentrackioproperties
                 return false;
             }
 
+            field = gsJson.at(fieldStr).get<double>();
             return true;
         };
 

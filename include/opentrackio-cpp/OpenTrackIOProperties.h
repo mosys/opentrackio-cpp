@@ -518,8 +518,9 @@ namespace opentrackio::opentrackioproperties
 
     /**
     * A list of transforms.
-    * Transforms are composed in order with the last in the list representing the X,Y,Z in meters of camera
-    * sensor relative to stage origin. The Z axis points upwards and the coordinate system is right-handed.
+    * Transforms are composed in sequential order, starting with the first transform in the list and concluding with
+    * the last transform in the list. The compound transform contains the position (in meters) and orientation
+    * (in degrees) of the camera sensor relative to stage origin. The Z axis points upwards and the coordinate system is right-handed.
     * Y points in the forward camera direction (when pan, tilt and roll are zero). For example in an LED volume
     * Y would point towards the centre of the LED wall and so X would point to camera-right. Rotation expressed as
     * euler angles in degrees of the camera sensor relative to stage origin Rotations are intrinsic and are measured

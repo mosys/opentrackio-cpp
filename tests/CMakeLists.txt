@@ -95,21 +95,25 @@ target_link_libraries(tests
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_link_libraries(tests PRIVATE opentrackio-cppd.lib)
-    # Post-build copy debug dlls
-    add_custom_command(TARGET tests
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "${CMAKE_CURRENT_LIST_DIR}/build/_deps/curl-build/lib/Debug/libcurl-d.dll"
-            "${CMAKE_CURRENT_LIST_DIR}/build/Debug/"
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "${CMAKE_CURRENT_LIST_DIR}/build/_deps/catch2-build/src/Debug/Catch2d.dll"
-            "${CMAKE_CURRENT_LIST_DIR}/build/Debug/"
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "${CMAKE_CURRENT_LIST_DIR}/build/_deps/catch2-build/src/Debug/Catch2Maind.dll"
-            "${CMAKE_CURRENT_LIST_DIR}/build/Debug/"
-    )
+    target_link_libraries(tests PRIVATE opentrackio-cppd)
+
+    if (WIN32)
+        # For Windows, we need to link against the debug versions of the libraries
+        target_link_libraries(tests PRIVATE ws2_32.lib)
+        # Post-build copy debug dlls
+        add_custom_command(TARGET tests
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+                "${CMAKE_CURRENT_LIST_DIR}/build/_deps/curl-build/lib/Debug/libcurl-d.dll"
+                "${CMAKE_CURRENT_LIST_DIR}/build/Debug/"
+            COMMAND ${CMAKE_COMMAND} -E copy
+                "${CMAKE_CURRENT_LIST_DIR}/build/_deps/catch2-build/src/Debug/Catch2d.dll"
+                "${CMAKE_CURRENT_LIST_DIR}/build/Debug/"
+            COMMAND ${CMAKE_COMMAND} -E copy
+                "${CMAKE_CURRENT_LIST_DIR}/build/_deps/catch2-build/src/Debug/Catch2Maind.dll"
+                "${CMAKE_CURRENT_LIST_DIR}/build/Debug/")
+    endif ()
 else()
-    target_link_libraries(tests PRIVATE opentrackio-cpp.lib)
+    target_link_libraries(tests PRIVATE opentrackio-cpp)
 endif()
 

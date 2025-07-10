@@ -22,19 +22,34 @@
 using nlohmann::json;
 using nlohmann::json_schema::json_validator;
 
-const std::string OPENTRACKIO_ROOT_URL = "https://www.opentrackio.org/";
+const std::string SMPTE_METADATA_CAMDKIT_ROOT = "https://ris-pub.smpte.org/ris-osvp-metadata-camdkit/";
+const std::string SMPTE_EXAMPLES_ROOT = SMPTE_METADATA_CAMDKIT_ROOT + "examples/";
 
 TEST_CASE("OpenTrackIOSample basic initialisation", "[init]")
 {
-    opentrackio::OpenTrackIOSample sample;
-    REQUIRE_THROWS(sample.initialise(std::string_view("")));
-    std::span<const uint8_t> cbor;
-    REQUIRE_THROWS(sample.initialise(cbor));
-    json j;
-    REQUIRE(sample.initialise(j));
-    REQUIRE(sample.getErrors().empty());
-    REQUIRE(sample.getWarnings().empty());
-    REQUIRE(sample.getJson() == j);
+    SECTION("Initialising from an empty string should be unsuccessful.")
+    {
+        opentrackio::OpenTrackIOSample sample;
+        REQUIRE_FALSE(sample.initialise(std::string_view("")));
+    }
+
+    SECTION("Initialising from an empty CBOR object should be unsuccessful.")
+    {
+        opentrackio::OpenTrackIOSample sample;
+        std::span<const uint8_t> cbor;
+        REQUIRE_FALSE(sample.initialise(cbor));
+    }
+
+    SECTION("Initialising from an empty JSON object should be unsuccessful.")
+    {
+        opentrackio::OpenTrackIOSample sample;
+        json j;
+
+        REQUIRE_FALSE(sample.initialise(j));
+        REQUIRE_FALSE(sample.getErrors().empty());
+        REQUIRE(sample.getWarnings().empty());
+        REQUIRE(sample.getJson() == j);
+    }
 }
 
 //Convert curl out to string
@@ -76,14 +91,14 @@ bool getString(const std::string& url, std::string& response)
 // Fetch schema from the OpenTrackIO HTTPS endpoint
 bool getStringSchema(std::string& response)
 {
-    std::string url = OPENTRACKIO_ROOT_URL + "schema.json";
+    std::string url = SMPTE_METADATA_CAMDKIT_ROOT + "schema.json";
     return getString(url, response);
 }
 
 // Fetch example from the OpenTrackIO HTTPS endpoint
 bool getStringExample(const std::string& name, std::string& response)
 {
-    std::string url = OPENTRACKIO_ROOT_URL + "examples/" + name + ".json";
+    std::string url = SMPTE_EXAMPLES_ROOT + name + ".json";
     std::cout << "Testing " << name << std::endl;
     return getString(url, response);
 }
@@ -120,14 +135,16 @@ void testRecommendedDynamic(const std::string& response)
     REQUIRE(sample.tracker->status == "Optical Good");
 
     REQUIRE(sample.timing->mode == opentrackio::opentrackioproperties::Timing::Mode::EXTERNAL);
-    REQUIRE(sample.timing->sampleRate->numerator == 24'000);
-    REQUIRE(sample.timing->sampleRate->denominator == 1'001);
+    REQUIRE(sample.timing->sampleRate->numerator == 24);
+    REQUIRE(sample.timing->sampleRate->denominator == 1);
     REQUIRE(sample.timing->timecode->hours == 1);
     REQUIRE(sample.timing->timecode->minutes == 2);
     REQUIRE(sample.timing->timecode->seconds == 3);
     REQUIRE(sample.timing->timecode->frames == 4);
-    REQUIRE(sample.timing->timecode->frameRate.numerator == 24'000);
-    REQUIRE(sample.timing->timecode->frameRate.denominator == 1'001);
+    REQUIRE(sample.timing->timecode->frameRate.numerator == 24);
+    REQUIRE(sample.timing->timecode->frameRate.denominator == 1);
+    REQUIRE_FALSE(sample.timing->timecode->subFrame.has_value());
+    REQUIRE_FALSE(sample.timing->timecode->dropFrame.has_value());
 
     REQUIRE(sample.lens->distortion->size() == 1);
     REQUIRE(sample.lens->distortion->at(0).radial == std::vector<double>{1.0, 2.0, 3.0});
@@ -185,8 +202,8 @@ void testCompleteDynamic(const std::string& response)
     REQUIRE(sample.timing->mode == opentrackio::opentrackioproperties::Timing::Mode::INTERNAL);
     REQUIRE(sample.timing->recordedTimestamp->seconds == 1718806000);
     REQUIRE(sample.timing->recordedTimestamp->nanoseconds == 500000000);
-    REQUIRE(sample.timing->sampleRate->numerator == 24'000);
-    REQUIRE(sample.timing->sampleRate->denominator == 1'001);
+    REQUIRE(sample.timing->sampleRate->numerator == 24);
+    REQUIRE(sample.timing->sampleRate->denominator == 1);
     REQUIRE(sample.timing->sampleTimestamp->seconds == 1718806554);
     REQUIRE(sample.timing->sampleTimestamp->nanoseconds == 500000000);
     REQUIRE(sample.timing->sequenceNumber == 0);
@@ -210,6 +227,8 @@ void testCompleteDynamic(const std::string& response)
     REQUIRE(sample.timing->timecode->frames == 4);
     REQUIRE(sample.timing->timecode->frameRate.numerator == 24'000);
     REQUIRE(sample.timing->timecode->frameRate.denominator == 1'001);
+    REQUIRE(sample.timing->timecode->subFrame == 1);
+    REQUIRE(sample.timing->timecode->dropFrame == true);
 
     REQUIRE(sample.lens->custom->size() == 2);
     REQUIRE(sample.lens->custom == std::vector<double>{1.0, 2.0});
@@ -344,6 +363,8 @@ void testCompleteStatic(const std::string& response)
     REQUIRE(sample.timing->timecode->frames == 4);
     REQUIRE(sample.timing->timecode->frameRate.numerator == 24'000);
     REQUIRE(sample.timing->timecode->frameRate.denominator == 1001);
+    REQUIRE(sample.timing->timecode->subFrame == 1);
+    REQUIRE(sample.timing->timecode->dropFrame == true);
 
     REQUIRE(sample.tracker->notes == "Example generated sample.");
     REQUIRE(sample.tracker->recording == false);
