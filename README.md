@@ -22,7 +22,7 @@ If your project is already using Cmake you can download a build for the desired 
 Simply then add the `{buildDir}/lib/{platform}/cmake` path to either your `CMAKE_PREFIX_PATH` or in your `CMakeLists.txt`
 set `opentrackio-cpp_DIR` to that same path.
 
-Alternatively one could do a [system-wide](#system-wide) build of the project to install the library to the standard CMake
+Alternatively one could do a [system-wide installation](#system-wide-installation) to install the library to the standard CMake
 library paths where `find_package` can be used without any additional setup.
 
 ### Build Instructions
@@ -38,28 +38,132 @@ Both `Windows` and `Linux` build scripts write to the same `./install` folder bu
 are separated by OS. This means that you can run both scripts to have builds for both systems in the same artefact
 if you plan on targeting both `Windows` and `Linux` with your project.
 
+#### Building for Local Use
+
+Run the appropriate build script from the `scripts/` directory to build both `Debug` and `Release` versions of the 
+library. The artefact can then be imported into your own project via CMake's `find_package` feature.
+
+**By default, the library builds as a shared library.**
+
+**Windows:**
+```batch
+scripts\build.bat
+```
+
+**Linux/macOS:**
+```bash
+./scripts/build.sh
+```
+
+**To build as a static library instead:**
+
+**Windows:**
+```batch
+cmake -B build/release -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=ON
+cmake --build build/release --config Release
+```
+
+**Linux/macOS:**
+```bash
+cmake -B build/release -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=ON
+cmake --build build/release
+```
+
+#### System-wide Installation
+
+Run the appropriate install script from the `scripts/` directory to install the library to the system itself. 
+This allows you to just use `find_package` without needing to set `opentrackio-cpp_DIR` in your CMake or adding 
+the path to the library to your `CMAKE_PREFIX_PATH`.
+
+**Windows:**
+```batch
+scripts\install.bat
+```
+
+**Linux/macOS:**
+```bash
+./scripts/install.sh
+# Note: May require sudo for system-wide installation
+```
+
+**To install as a static library:**
+
+**Windows:**
+```batch
+cmake -B build/release -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=ON
+cmake --build build/release --config Release --target install
+```
+
+**Linux/macOS:**
+```bash
+cmake -B build/release -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=ON
+cmake --build build/release --target install
+# Note: May require sudo for system-wide installation
+```
+
+## Tests
+
+The test suite is optional and disabled by default.
+
+### Quick Test with Scripts
+
+The easiest way to build and run tests is using the provided test scripts. These scripts automatically build the library as a static library (required for proper test linking) and run the test suite:
+
 #### Windows:
 
-Run the `build.bat` script in order to build both `Debug` and `Release` version of the library into the 
-`./install` folder. The artefact in the `./install` can then be imported into your own project via Cmake's
-`find_package` feature.
+```batch
+scripts\test.bat
+```
 
-#### Linux:
+#### Linux/macOS:
 
-Run the `build.sh` script in order to build both `Debug` and `Release` version of the library into the
-`./install` folder. The artefact in the `./install` can then be imported into your own project via Cmake's
-`find_package` feature.
+```bash
+./scripts/test.sh
+```
 
-#### System-wide:
+### Building with Tests Manually
 
-Run the `install.bat/sh` (depending on OS) to install the library to the system itself. This allows you to just use
-`find_package` without needing to set `opentrackio-cpp_DIR` in your Cmake or adding the path to the library to your
-`CMAKE_PREFIX_PATH`.
+To build the library with tests enabled manually, add the `-DOPENTRACKIO_BUILD_TESTS=ON` flag. **Note: Tests require building as a static library (`-DBUILD_STATIC_LIBS=ON`) for proper linking.**
 
-## Tests:
+#### Windows:
 
-Pre-requistites OpenSSL. For Windows install from [here](https://slproweb.com/products/Win32OpenSSL.html)
-To build and run the tests run `cmake -DCMAKE_BUILD_TYPE=<Debug/Release> -DOPENSSL_ROOT_DIR="<path to openssl root>" ..` in `./tests/build`.
+```batch
+cmake -B build -G "Visual Studio 17 2022" -A x64 -DOPENTRACKIO_BUILD_TESTS=ON -DBUILD_STATIC_LIBS=ON
+cmake --build build --config Debug
+```
+
+#### Linux/macOS:
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Debug -DOPENTRACKIO_BUILD_TESTS=ON -DBUILD_STATIC_LIBS=ON
+cmake --build build
+```
+
+### Running Tests
+
+After building with tests enabled, you can run the tests:
+
+#### Windows:
+
+```batch
+# Using the test executable directly
+.\build\tests\Debug\tests.exe
+
+# Or using CTest
+cd build
+ctest -C Debug
+```
+
+#### Linux/macOS:
+
+```bash
+# Using the test executable directly
+./build/tests/tests
+
+# Or using CTest
+cd build
+ctest
+```
 
 ## Licence
 
