@@ -21,7 +21,7 @@
 #define OPEN_TRACK_IO_PROTOCOL_NAME "OpenTrackIO"
 #define OPEN_TRACK_IO_PROTOCOL_MAJOR_VERSION 1
 #define OPEN_TRACK_IO_PROTOCOL_MINOR_VERSION 0
-#define OPEN_TRACK_IO_PROTOCOL_PATCH         0
+#define OPEN_TRACK_IO_PROTOCOL_PATCH         1
 
 namespace opentrackio::opentrackioproperties
 {
