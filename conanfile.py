@@ -4,7 +4,7 @@ from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
 
 class opentrackiocppRecipe(ConanFile):
     name = "opentrackio-cpp"
-    version = "0.9.1"
+    version = "1.0.1"
     package_type = "library"
 
     license = "MIT"

@@ -9,23 +9,23 @@
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-cmake_minimum_required(VERSION 3.15.7)
-project(opentrackio-cpp-tests VERSION 0.9.1 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.25)
+project(opentrackio-cpp-tests VERSION 1.0.1 LANGUAGES CXX)
 Include(FetchContent)
 
 # Catch 2 test framework
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v3.4.0 # or a later release
+  GIT_TAG        v3.5.0
 )
-set(CATCH_BUILD_SHARED ON CACHE BOOL "Build Catch2 as a shared library" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build libraries as static" FORCE)
 FetchContent_MakeAvailable(Catch2)
 
 # OpenSSL - for Curl
 FetchContent_Declare(
     ssl_content
-    URL "https://github.com/janbar/openssl-cmake/archive/refs/tags/1.1.1w-20231130.tar.gz"
+    URL "https://github.com/janbar/openssl-cmake/archive/refs/tags/1.1.1w-20250419.tar.gz"
     OVERRIDE_FIND_PACKAGE
 )
 FetchContent_MakeAvailable(ssl_content)
@@ -36,18 +36,17 @@ FetchContent_Declare(
         URL "https://github.com/curl/curl/archive/refs/tags/curl-8_7_1.tar.gz"
         OVERRIDE_FIND_PACKAGE
 )
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build libraries as static" FORCE)
 set(CURL_USE_OPENSSL ON CACHE INTERNAL "Use OpenSSL backend" FORCE)
+set(BUILD_CURL_EXE OFF CACHE BOOL "Don't build curl executable" FORCE)
+set(BUILD_TESTING OFF CACHE BOOL "Don't build curl tests" FORCE)
 option(CMAKE_USE_SCHANNEL "Set to ON to use WINSSL for windows." ON)
 FetchContent_MakeAvailable(curl)
+find_package(CURL REQUIRED)
 
 # Json
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake")
 find_package(nlohmann_json REQUIRED)
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    link_directories(${CMAKE_CURRENT_LIST_DIR}/../build/debug/Debug)
-else()
-    link_directories(${CMAKE_CURRENT_LIST_DIR}/../build/release/Release)
-endif()
 
 # Json validator
 FetchContent_Declare(nlohmann_json_schema_validator
@@ -82,11 +81,10 @@ target_sources(tests
         ../src/OpenTrackIOSample.cpp
 )
 
-find_package(CURL REQUIRED)
-
 # Linkage
 target_link_libraries(tests
     PRIVATE
+        opentrackio-cpp
         Catch2::Catch2WithMain
         ssl
         crypto
@@ -94,26 +92,7 @@ target_link_libraries(tests
         nlohmann_json_schema_validator
 )
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_link_libraries(tests PRIVATE opentrackio-cppd)
-
-    if (WIN32)
-        # For Windows, we need to link against the debug versions of the libraries
-        target_link_libraries(tests PRIVATE ws2_32.lib)
-        # Post-build copy debug dlls
-        add_custom_command(TARGET tests
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-                "${CMAKE_CURRENT_LIST_DIR}/build/_deps/curl-build/lib/Debug/libcurl-d.dll"
-                "${CMAKE_CURRENT_LIST_DIR}/build/Debug/"
-            COMMAND ${CMAKE_COMMAND} -E copy
-                "${CMAKE_CURRENT_LIST_DIR}/build/_deps/catch2-build/src/Debug/Catch2d.dll"
-                "${CMAKE_CURRENT_LIST_DIR}/build/Debug/"
-            COMMAND ${CMAKE_COMMAND} -E copy
-                "${CMAKE_CURRENT_LIST_DIR}/build/_deps/catch2-build/src/Debug/Catch2Maind.dll"
-                "${CMAKE_CURRENT_LIST_DIR}/build/Debug/")
-    endif ()
-else()
-    target_link_libraries(tests PRIVATE opentrackio-cpp)
+if (WIN32)
+    # For Windows, we need to link against ws2_32
+    target_link_libraries(tests PRIVATE ws2_32.lib)
 endif()
-

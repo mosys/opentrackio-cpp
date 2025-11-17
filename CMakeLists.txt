@@ -10,7 +10,25 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.15.7)
-project(opentrackio-cpp VERSION 0.9.1 LANGUAGES CXX)
+project(opentrackio-cpp VERSION 1.0.1 LANGUAGES CXX)
+
+# Optional test suite
+option(OPENTRACKIO_BUILD_TESTS "Build the test suite" OFF)
+option(BUILD_STATIC_LIBS "Build opentrackio static libraries" OFF)
+
+# Set optimization flags for Release builds
+if(MSVC)
+    # Windows/MSVC optimizations
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /Ob2 /GL")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG /OPT:REF /OPT:ICF")
+    set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG /OPT:REF /OPT:ICF")
+    set(CMAKE_STATIC_LINKER_FLAGS_RELEASE "${CMAKE_STATIC_LINKER_FLAGS_RELEASE} /LTCG")
+else()
+    # Linux/macOS/GCC/Clang optimizations
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -flto")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto")
+    set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -flto")
+endif()
 
 set (
         source_list
@@ -23,7 +41,13 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(nlohmann_json REQUIRED)
 
-add_library(${PROJECT_NAME})
+# Build static library if requested, otherwise build shared
+if(BUILD_STATIC_LIBS)
+    add_library(${PROJECT_NAME} STATIC)
+else()
+    add_library(${PROJECT_NAME} SHARED)
+endif()
+
 target_sources(${PROJECT_NAME} PRIVATE ${source_list})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
@@ -62,15 +86,15 @@ install(TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}Targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 # Write targets and config out to different folders depending on OS relating to the differing search procedure cmake does.
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-    set(cmake_targets_install_dir ${CMAKE_INSTALL_PREFIX}/cmake)
+    set(cmake_targets_install_dir cmake)
 else()
-    set(cmake_targets_install_dir ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+    set(cmake_targets_install_dir cmake/${PROJECT_NAME})
 endif()
 
 install(EXPORT ${PROJECT_NAME}Targets
@@ -100,3 +124,8 @@ configure_package_config_file(
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
         DESTINATION ${cmake_targets_install_dir}
 )
+
+if(OPENTRACKIO_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()

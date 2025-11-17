@@ -22,8 +22,11 @@
 using nlohmann::json;
 using nlohmann::json_schema::json_validator;
 
-const std::string SMPTE_METADATA_CAMDKIT_ROOT = "https://ris-pub.smpte.org/ris-osvp-metadata-camdkit/";
-const std::string SMPTE_EXAMPLES_ROOT = SMPTE_METADATA_CAMDKIT_ROOT + "examples/";
+namespace
+{
+    const std::string SMPTE_METADATA_CAMDKIT_ROOT = "https://ris-pub.smpte.org/ris-osvp-metadata-camdkit/";
+    const std::string SMPTE_EXAMPLES_ROOT = SMPTE_METADATA_CAMDKIT_ROOT + "examples/";
+} // namespace
 
 TEST_CASE("OpenTrackIOSample basic initialisation", "[init]")
 {
