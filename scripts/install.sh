@@ -16,15 +16,15 @@ set -e  # Exit on error
 # Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$SCRIPT_DIR/.."
+INSTALL_DIR="$PROJECT_ROOT/install"
 
 cd "$PROJECT_ROOT"
 
 echo "========================================"
-echo "Installing OpenTrackIO C++ Library (System-wide)"
+echo "Installing OpenTrackIO C++ Library (Local)"
 echo "========================================"
 echo
-echo "This will install the library to the default system CMake paths."
-echo "Administrator privileges may be required (use sudo if needed)."
+echo "This will install the library to: $INSTALL_DIR"
 echo
 
 # Clean previous build
@@ -33,18 +33,25 @@ if [ -d "build" ]; then
     rm -rf build
 fi
 
+# Clean previous install
+if [ -d "install" ]; then
+    echo "Removing previous install directory..."
+    rm -rf install
+fi
+
 echo
-echo "Configuring Release build for system installation..."
+echo "Configuring Release build for local installation..."
 echo "Note: By default builds shared library. To build static library, add -DBUILD_STATIC_LIBS=ON"
-cmake -B build/release -DCMAKE_BUILD_TYPE=Release
+cmake -B build/release -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR"
 
 echo
 echo "Building and installing..."
-cmake --build build/release --target install
+cmake --build build/release
+cmake --install build/release
 
 echo
 echo "========================================"
-echo "System-wide installation completed successfully!"
-echo "You can now use find_package(opentrackio-cpp) in your CMake projects."
+echo "Local installation completed successfully!"
+echo "Installed to: $INSTALL_DIR"
+echo "To use in CMake projects, set: -DCMAKE_PREFIX_PATH=$INSTALL_DIR"
 echo "========================================"
-

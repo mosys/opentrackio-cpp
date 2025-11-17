@@ -86,15 +86,15 @@ install(TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}Targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 # Write targets and config out to different folders depending on OS relating to the differing search procedure cmake does.
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-    set(cmake_targets_install_dir ${CMAKE_INSTALL_PREFIX}/cmake)
+    set(cmake_targets_install_dir cmake)
 else()
-    set(cmake_targets_install_dir ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+    set(cmake_targets_install_dir cmake/${PROJECT_NAME})
 endif()
 
 install(EXPORT ${PROJECT_NAME}Targets

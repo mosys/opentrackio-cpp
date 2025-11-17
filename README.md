@@ -18,12 +18,12 @@ Follow the instructions on the page to add this as a dependency to your project.
 #### CMake:
 
 If your project is already using Cmake you can download a build for the desired platform from the 
-[Releases Page](https://github.com/mosys/opentrackio-cpp/releases) import the library into your project via `find_package`.
-Simply then add the `{buildDir}/lib/{platform}/cmake` path to either your `CMAKE_PREFIX_PATH` or in your `CMakeLists.txt`
+[Releases Page](https://github.com/mosys/opentrackio-cpp/releases). Import the library into your project via `find_package`, 
+then add the `{buildDir}/lib/{platform}/cmake` path to either your `CMAKE_PREFIX_PATH` or in your `CMakeLists.txt`
 set `opentrackio-cpp_DIR` to that same path.
 
-Alternatively one could do a [system-wide installation](#system-wide-installation) to install the library to the standard CMake
-library paths where `find_package` can be used without any additional setup.
+Alternatively one could do a [local installation](#local-installation) to install the library to the `./install` folder, which
+can then be used with CMake's `find_package` by setting `CMAKE_PREFIX_PATH`.
 
 ### Build Instructions
 
@@ -34,7 +34,7 @@ library paths where `find_package` can be used without any additional setup.
 
 #### Note:
 
-Both `Windows` and `Linux` build scripts write to the same `./install` folder but their Cmake configs and targets
+Both `Windows` and `Linux` install scripts write to the same `./install` folder but their Cmake configs and targets
 are separated by OS. This means that you can run both scripts to have builds for both systems in the same artefact
 if you plan on targeting both `Windows` and `Linux` with your project.
 
@@ -69,11 +69,10 @@ cmake -B build/release -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=ON
 cmake --build build/release
 ```
 
-#### System-wide Installation
+#### Local Installation
 
-Run the appropriate install script from the `scripts/` directory to install the library to the system itself. 
-This allows you to just use `find_package` without needing to set `opentrackio-cpp_DIR` in your CMake or adding 
-the path to the library to your `CMAKE_PREFIX_PATH`.
+Run the appropriate install script from the `scripts/` directory to install the library to the `./install` folder in the 
+project root. The installed library can then be imported into your own project via CMake's `find_package` feature.
 
 **Windows:**
 ```batch
@@ -83,29 +82,40 @@ scripts\install.bat
 **Linux/macOS:**
 ```bash
 ./scripts/install.sh
-# Note: May require sudo for system-wide installation
+```
+
+After installation, use the library in your CMake projects by setting the `CMAKE_PREFIX_PATH`:
+
+```cmake
+cmake -DCMAKE_PREFIX_PATH=/path/to/opentrackio-cpp/install ..
+```
+
+Or by setting it in your CMakeLists.txt:
+
+```cmake
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../opentrackio-cpp/install")
+find_package(opentrackio-cpp REQUIRED)
 ```
 
 **To install as a static library:**
 
 **Windows:**
 ```batch
-cmake -B build/release -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=ON
-cmake --build build/release --config Release --target install
+cmake -B build/release -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=ON -DCMAKE_INSTALL_PREFIX=install
+cmake --build build/release --config Release
+cmake --install build/release --config Release
 ```
 
 **Linux/macOS:**
 ```bash
-cmake -B build/release -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=ON
-cmake --build build/release --target install
-# Note: May require sudo for system-wide installation
+cmake -B build/release -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=ON -DCMAKE_INSTALL_PREFIX=install
+cmake --build build/release
+cmake --install build/release
 ```
 
 ## Tests
 
 The test suite is optional and disabled by default.
-
-### Quick Test with Scripts
 
 The easiest way to build and run tests is using the provided test scripts. These scripts automatically build the library as a static library (required for proper test linking) and run the test suite:
 
@@ -148,10 +158,6 @@ After building with tests enabled, you can run the tests:
 ```batch
 # Using the test executable directly
 .\build\tests\Debug\tests.exe
-
-# Or using CTest
-cd build
-ctest -C Debug
 ```
 
 #### Linux/macOS:
@@ -159,10 +165,6 @@ ctest -C Debug
 ```bash
 # Using the test executable directly
 ./build/tests/tests
-
-# Or using CTest
-cd build
-ctest
 ```
 
 ## Licence
