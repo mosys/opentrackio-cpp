@@ -230,6 +230,7 @@ namespace opentrackio
         }
 
         assignJson(baseJson["lens"], "fStop", lens->fStop);
+        assignJson(baseJson["lens"], "pinholeFocalLength", lens->pinholeFocalLength);
         assignJson(baseJson["lens"], "focusDistance", lens->focusDistance);
 
         if (lens->projectionOffset.has_value())
