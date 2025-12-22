@@ -28,10 +28,14 @@ namespace opentrackio::opentrackiotypes
 
         Rational() = default;
 
-        Rational(uint32_t n, uint32_t d) : numerator{n}, denominator{d}
-        {};
-        
-        static std::optional<Rational> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors)
+        Rational(uint32_t n, uint32_t d) : numerator{n},
+                                           denominator{d}
+        {
+        };
+
+        static std::optional<Rational> parse(nlohmann::json& json,
+                                             std::string_view fieldStr,
+                                             std::vector<std::string>& errors)
         {
             const auto& rationalJson = json[fieldStr];
 
@@ -43,12 +47,16 @@ namespace opentrackio::opentrackiotypes
                 return std::nullopt;
             }
 
-            if (!OpenTrackIOHelpers::checkTypeAndSetField(rationalJson["num"], num) ||
-                !OpenTrackIOHelpers::checkTypeAndSetField(rationalJson["denom"], denom))
+            if (!rationalJson.at("num").is_number_unsigned() || !rationalJson.at("denom").is_number_unsigned())
             {
-                errors.emplace_back(std::format("Key: {} numerator or denominator field types are incorrect.", fieldStr));
+                errors.
+                        emplace_back(std::format("Key: {} numerator or denominator field isn't of type: unsigned integer",
+                                                 fieldStr));
                 return std::nullopt;
             }
+
+            OpenTrackIOHelpers::getFieldFromJson(rationalJson["num"], num);
+            OpenTrackIOHelpers::getFieldFromJson(rationalJson["denom"], denom);
 
             return Rational(num, denom);
         }
@@ -62,10 +70,15 @@ namespace opentrackio::opentrackiotypes
 
         Vector3() = default;
 
-        Vector3(double x, double y, double z) : x{x}, y{y}, z{z}
-        {};
+        Vector3(double x, double y, double z) : x{x},
+                                                y{y},
+                                                z{z}
+        {
+        };
 
-        static std::optional<Vector3> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors)
+        static std::optional<Vector3> parse(nlohmann::json& json,
+                                            std::string_view fieldStr,
+                                            std::vector<std::string>& errors)
         {
             const auto& vecJson = json[fieldStr];
 
@@ -76,13 +89,17 @@ namespace opentrackio::opentrackiotypes
                 return std::nullopt;
             }
 
-            if (!OpenTrackIOHelpers::checkTypeAndSetField(vecJson["x"], vec.x) ||
-                !OpenTrackIOHelpers::checkTypeAndSetField(vecJson["y"], vec.y) ||
-                !OpenTrackIOHelpers::checkTypeAndSetField(vecJson["z"], vec.z))
+            if (!vecJson.at("x").is_number() ||
+                !vecJson.at("y").is_number() ||
+                !vecJson.at("z").is_number())
             {
-                errors.emplace_back(std::format("Key: {} Vector3 fields aren't of type double", fieldStr));
+                errors.emplace_back(std::format("Key: {} Vector3 fields aren't of type: double", fieldStr));
                 return std::nullopt;
             }
+
+            OpenTrackIOHelpers::getFieldFromJson(vecJson["x"],vec.x);
+            OpenTrackIOHelpers::getFieldFromJson(vecJson["y"], vec.y);
+            OpenTrackIOHelpers::getFieldFromJson(vecJson["z"], vec.z);
 
             return vec;
         }
@@ -96,10 +113,15 @@ namespace opentrackio::opentrackiotypes
 
         Rotation() = default;
 
-        Rotation(double p, double t, double r) : pan{p}, tilt{t}, roll{r}
-        {};
+        Rotation(double p, double t, double r) : pan{p},
+                                                 tilt{t},
+                                                 roll{r}
+        {
+        };
 
-        static std::optional<Rotation> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors)
+        static std::optional<Rotation> parse(nlohmann::json& json,
+                                             std::string_view fieldStr,
+                                             std::vector<std::string>& errors)
         {
             const auto& rotJson = json[fieldStr];
 
@@ -110,13 +132,17 @@ namespace opentrackio::opentrackiotypes
                 return std::nullopt;
             }
 
-            if (!OpenTrackIOHelpers::checkTypeAndSetField(rotJson["tilt"], rot.tilt) ||
-                !OpenTrackIOHelpers::checkTypeAndSetField(rotJson["pan"], rot.pan) ||
-                !OpenTrackIOHelpers::checkTypeAndSetField(rotJson["roll"], rot.roll))
+            if (!rotJson.at("pan").is_number() ||
+                !rotJson.at("tilt").is_number() ||
+                !rotJson.at("roll").is_number())
             {
-                errors.emplace_back(std::format("Key: {} Rotation fields aren't of type double", fieldStr));
+                errors.emplace_back(std::format("Key: {} Rotation fields aren't of type: double", fieldStr));
                 return std::nullopt;
             }
+
+            OpenTrackIOHelpers::getFieldFromJson(rotJson["tilt"], rot.tilt);
+            OpenTrackIOHelpers::getFieldFromJson(rotJson["pan"], rot.pan);
+            OpenTrackIOHelpers::getFieldFromJson(rotJson["roll"], rot.roll);
 
             return rot;
         }
@@ -130,13 +156,29 @@ namespace opentrackio::opentrackiotypes
         uint8_t frames = 0;
         Rational frameRate{};
         std::optional<uint32_t> subFrame = std::nullopt;
-        
-        Timecode() = default;
-        Timecode(uint8_t h, uint8_t m, uint8_t s, uint8_t f, Rational fr, std::optional<uint32_t> sf = std::nullopt)
-                : hours{h}, minutes{m}, seconds{s}, frames{f}, frameRate{fr}, subFrame{sf}
-        {};
+        std::optional<bool> dropFrame = std::nullopt;
 
-        static std::optional<Timecode> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors)
+        Timecode() = default;
+
+        Timecode(uint8_t h,
+                 uint8_t m,
+                 uint8_t s,
+                 uint8_t f,
+                 Rational fr,
+                 std::optional<uint32_t> sf = std::nullopt,
+                 std::optional<bool> df = std::nullopt): hours{h},
+                                                         minutes{m},
+                                                         seconds{s},
+                                                         frames{f},
+                                                         frameRate{fr},
+                                                         subFrame{sf},
+                                                         dropFrame{df}
+        {
+        };
+
+        static std::optional<Timecode> parse(nlohmann::json& json,
+                                             std::string_view fieldStr,
+                                             std::vector<std::string>& errors)
         {
             auto& tcJson = json[fieldStr];
 
@@ -151,7 +193,8 @@ namespace opentrackio::opentrackiotypes
             OpenTrackIOHelpers::assignField(tcJson, "seconds", seconds, "uint8", errors);
             OpenTrackIOHelpers::assignField(tcJson, "frames", frames, "uint8", errors);
 
-            if (!hours.has_value() || !minutes.has_value() || !seconds.has_value() || !frames.has_value() || !frameRate.has_value())
+            if (!hours.has_value() || !minutes.has_value() || !seconds.has_value() || !frames.has_value() || !frameRate.
+                has_value())
             {
                 errors.emplace_back("field: timing/timecode is missing required fields");
                 return std::nullopt;
@@ -160,7 +203,18 @@ namespace opentrackio::opentrackiotypes
             std::optional<uint32_t> subFrame;
             OpenTrackIOHelpers::assignField(tcJson, "subFrame", subFrame, "uint32_t", errors);
 
-            return Timecode{hours.value(), minutes.value(), seconds.value(), frames.value(), frameRate.value(), subFrame};
+            std::optional<bool> dropFrame;
+            OpenTrackIOHelpers::assignField(tcJson, "dropFrame", dropFrame, "boolean", errors);
+
+            return Timecode{
+                hours.value(),
+                minutes.value(),
+                seconds.value(),
+                frames.value(),
+                frameRate.value(),
+                subFrame,
+                dropFrame
+            };
         }
     };
 
@@ -171,9 +225,14 @@ namespace opentrackio::opentrackiotypes
 
         Timestamp() = default;
 
-        Timestamp(uint64_t s, uint32_t n) : seconds{s}, nanoseconds{n} {};
+        Timestamp(uint64_t s, uint32_t n) : seconds{s},
+                                            nanoseconds{n}
+        {
+        };
 
-        static std::optional<Timestamp> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors)
+        static std::optional<Timestamp> parse(nlohmann::json& json,
+                                              std::string_view fieldStr,
+                                              std::vector<std::string>& errors)
         {
             auto& tsJson = json[fieldStr];
 
@@ -194,7 +253,7 @@ namespace opentrackio::opentrackiotypes
     };
 
     template<typename T>
-    requires std::integral<T> || std::floating_point<T>
+        requires std::integral<T> || std::floating_point<T>
     struct Dimensions
     {
         T width = 0;
@@ -202,10 +261,14 @@ namespace opentrackio::opentrackiotypes
 
         Dimensions() = default;
 
-        Dimensions(T w, T h) : width{w}, height{h}
-        {};
+        Dimensions(T w, T h) : width{w},
+                               height{h}
+        {
+        };
 
-        static std::optional<Dimensions<T>> parse(nlohmann::json &json, std::string_view fieldStr, std::vector<std::string> &errors)
+        static std::optional<Dimensions<T> > parse(nlohmann::json& json,
+                                                   std::string_view fieldStr,
+                                                   std::vector<std::string>& errors)
         {
             auto& dimJson = json[fieldStr];
 
@@ -234,9 +297,12 @@ namespace opentrackio::opentrackiotypes
 
         Transform() = default;
 
-        Transform(Vector3 trans, Rotation rot) : translation{trans}, rotation{rot} {};
-        
-        static std::optional<Transform> parse(nlohmann::json &json, std::vector<std::string> &errors)
+        Transform(Vector3 trans, Rotation rot) : translation{trans},
+                                                 rotation{rot}
+        {
+        };
+
+        static std::optional<Transform> parse(nlohmann::json& json, std::vector<std::string>& errors)
         {
             Transform tf{};
 
@@ -254,12 +320,12 @@ namespace opentrackio::opentrackiotypes
 
             rotation = Rotation::parse(json, "rotation", errors);
             json.erase("rotation");
-            
+
             if (!translation.has_value() || !rotation.has_value())
             {
                 return std::nullopt;
             }
-            
+
             tf.translation = translation.value();
             tf.rotation = rotation.value();
 
@@ -269,7 +335,7 @@ namespace opentrackio::opentrackiotypes
                 tf.scale = Vector3::parse(json, "scale", errors);
                 json.erase("scale");
             }
-            
+
             OpenTrackIOHelpers::assignField(json, "id", tf.id, "string", errors);
 
             return tf;

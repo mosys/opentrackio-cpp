@@ -36,7 +36,7 @@ namespace opentrackio
     class OpenTrackIOHelpers
     {
     public:
-        static inline void clearFieldIfEmpty(nlohmann::json &json, std::string_view fieldStr)
+        static void clearFieldIfEmpty(nlohmann::json &json, std::string_view fieldStr)
         {
             if (json[fieldStr].is_object() && std::distance(json[fieldStr].items().begin(), json[fieldStr].items().end()) == 0)
             {
@@ -45,89 +45,55 @@ namespace opentrackio
         }
         
         template<typename T>
-        static inline bool checkTypeAndSetField(const nlohmann::json &jsonVal, T &field)
+        static void getFieldFromJson(const nlohmann::json &jsonVal, T &outField) noexcept
         {
-            try
-            {
-                field = jsonVal.get<T>();
-                return true;
-            }
-            catch (...)
-            {
-                // Reset field to default if failed.
-                field = T{};
-                return false;
-            }
+                outField = jsonVal.get<T>();
         }
 
         template<typename T>
-        static inline bool checkTypeAndSetField(const nlohmann::json &jsonVal, std::optional<T> &field)
+        static void getFieldFromJson(const nlohmann::json &jsonVal, std::optional<T> &field) noexcept
         {
-            try
-            {
                 field = jsonVal.get<T>();
-                return true;
-            }
-            catch (...)
-            {
-                // Reset field to default if failed.
-                field = std::nullopt;
-                return false;
-            }
         }
 
         template<typename T>
-        static inline bool iterateJsonArrayAndPopulateVector(const nlohmann::json &jsonVal, std::vector<T> &vec)
+        static void iterateJsonArrayAndPopulateVector(const nlohmann::json &jsonVal, std::vector<T> &vec)
         {
             for (const auto &item: jsonVal.items())
             {
                 T val;
-                if (!checkTypeAndSetField(item.value(), val))
-                {
-                    return false;
-                }
+                getFieldFromJson(item.value(), val);
                 vec.emplace_back(val);
             }
-
-            return true;
         }
 
         template<typename T>
-        static inline bool iterateJsonArrayAndPopulateVector(const nlohmann::json &jsonVal, std::optional<std::vector<T>> &vec)
+        static void iterateJsonArrayAndPopulateVector(const nlohmann::json &jsonVal, std::optional<std::vector<T>> &vec)
         {
             std::vector<T> out;
             for (const auto &item: jsonVal.items())
             {
                 T val;
-                if (!checkTypeAndSetField(item.value(), val))
-                {
-                    return false;
-                }
+                getFieldFromJson(item.value(), val);
                 out.emplace_back(val);
             }
 
             vec = std::move(out);
-            return true;
         }
 
         template<typename T>
-        static inline void assignField(nlohmann::json &json, std::string_view fieldStr, std::optional<T> &field,
+        static void assignField(nlohmann::json &json, std::string_view fieldStr, std::optional<T> &field,
                          std::string_view typeStr, std::vector<std::string> &errors)
         {
             if (json.contains(fieldStr))
             {
-                if (!checkTypeAndSetField(json[fieldStr], field))
-                {
-                    errors.emplace_back(std::format("field: {} isn't of type: {}", fieldStr, typeStr));
-                    field = std::nullopt;
-                    return;
-                }
+                getFieldFromJson(json[fieldStr], field);
                 json.erase(fieldStr);
             }
         }
         
         template<Encoder T>
-        static inline void assignField(nlohmann::json &json, std::string_view fieldStr, std::optional<T> &field,
+        static void assignField(nlohmann::json &json, std::string_view fieldStr, std::optional<T> &field,
                          std::string_view typeStr, std::vector<std::string> &errors)
         {
             if (!json.contains(fieldStr))
@@ -151,17 +117,20 @@ namespace opentrackio
             json.erase(fieldStr);
         }
 
-        static inline void assignRegexField(nlohmann::json &json, std::string_view fieldStr, std::optional<std::string> &field,
+        static void assignRegexField(nlohmann::json &json, std::string_view fieldStr, std::optional<std::string> &field,
                               const std::regex &pattern, std::vector<std::string> &errors)
         {
             if (json.contains(fieldStr))
             {
-                if (!checkTypeAndSetField(json[fieldStr], field))
+                if (!json[fieldStr].is_string())
                 {
                     errors.emplace_back(std::format("field: {} isn't of type: string", fieldStr));
                     field = std::nullopt;
                     return;
                 }
+
+                getFieldFromJson(json[fieldStr], field);
+
                 if (std::smatch res; !std::regex_match(field.value(), res, pattern))
                 {
                     errors.emplace_back(std::format("field: {} doesn't match the required pattern", fieldStr));
@@ -185,12 +154,7 @@ namespace opentrackio
         }
 
         std::vector<std::string> vec{};
-        if (!iterateJsonArrayAndPopulateVector(json[fieldStr], vec))
-        {
-            errors.emplace_back("field: {} had elements not of type: string");
-            field = std::nullopt;
-            return;
-        }
+        iterateJsonArrayAndPopulateVector(json[fieldStr], vec);
 
         field = std::move(vec);
         json.erase(fieldStr);

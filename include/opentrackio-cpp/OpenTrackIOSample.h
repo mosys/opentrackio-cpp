@@ -56,7 +56,8 @@ namespace opentrackio
         void parseTimingToJson(nlohmann::json& baseJson);
         void parseTrackerToJson(nlohmann::json& baseJson);
         void parseTransformsToJson(nlohmann::json& baseJson);
-        
+
+        [[nodiscard]] bool isEmpty() const;
         void warnForRemainingFields(const nlohmann::json& json);
         
         std::optional<nlohmann::json> m_json = std::nullopt;

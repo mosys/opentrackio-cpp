@@ -14,7 +14,7 @@
 #include "opentrackio-cpp/OpenTrackIOSample.h"
 #include <format>
 
-namespace opentrackio 
+namespace opentrackio
 {
     template<typename T>
     void assignJson(nlohmann::json &json, std::string_view field, const std::optional<T> &value)
@@ -54,16 +54,16 @@ namespace opentrackio
             json[field]["nanoseconds"] = value->nanoseconds;
         }
     };
-    
+
     bool OpenTrackIOSample::initialise(const nlohmann::json &json)
     {
         // Take a copy of the full JSON for referencing later if needed.
         m_json = json;
-        
-        /** 
+
+        /**
          * Take a second copy of the original which will have all processed fields removed (this is to check for
          * leftover fields. */
-        
+
         nlohmann::json jsonCopy = json;
         camera = opentrackioproperties::Camera::parse(jsonCopy, m_errorMessages);
         duration = opentrackioproperties::Duration::parse(jsonCopy, m_errorMessages);
@@ -77,23 +77,61 @@ namespace opentrackio
         timing = opentrackioproperties::Timing::parse(jsonCopy, m_errorMessages);
         tracker = opentrackioproperties::Tracker::parse(jsonCopy, m_errorMessages);
         transforms = opentrackioproperties::Transforms::parse(jsonCopy, m_errorMessages);
-        
+
+        if (!m_errorMessages.empty())
+        {
+            return false;
+        }
+
+        if (isEmpty())
+        {
+            m_errorMessages.emplace_back("Sample contains no properties after parsing JSON.");
+            return false;
+        }
+
         // Check the copy to see if it has remaining fields and if so bubble up warnings.
         warnForRemainingFields(jsonCopy);
-        
+
         return true;
     }
 
     bool OpenTrackIOSample::initialise(const std::string_view jsonString)
     {
-        nlohmann::json from_string = nlohmann::json::parse(jsonString);
+        constexpr auto parseCallback = nullptr;
+        constexpr bool allowExceptions = false;
+        const nlohmann::json from_string = nlohmann::json::parse(jsonString, parseCallback, allowExceptions);
+
+        if (from_string.is_discarded())
+        {
+            m_errorMessages.emplace_back("Unable to initialise OpenTrackIO sample, JSON parse error.");
+            return false;
+        }
+
         return initialise(from_string);
     }
-    
+
     bool OpenTrackIOSample::initialise(std::span<const uint8_t> cbor)
     {
-        nlohmann::json from_cbor = nlohmann::json::from_cbor(cbor);
-        return initialise(from_cbor);
+        try
+        {
+            const nlohmann::json from_cbor = nlohmann::json::from_cbor(cbor);
+            return initialise(from_cbor);
+        }
+        catch (const nlohmann::json::parse_error& error)
+        {
+            m_errorMessages.emplace_back(
+                std::string("Unable to initialise OpenTrackIO sample, CBOR parse error: ") +
+                error.what() + " at byte " + std::to_string(error.byte));
+
+            return false;
+        }
+        catch (...)
+        {
+            m_errorMessages.emplace_back(
+                "Unable to initialise OpenTrackIO sample. Unknown exception occurred during CBOR parsing.");
+
+            return false;
+        }
     }
 
     const nlohmann::json &OpenTrackIOSample::getJson()
@@ -101,15 +139,15 @@ namespace opentrackio
         if (!m_json.has_value())
         {
             generateJson();
-        }        
-        
+        }
+
         return m_json.value();
     }
 
     void OpenTrackIOSample::generateJson()
     {
         namespace props = opentrackioproperties;
-        
+
         nlohmann::json j;
 
         parseCameraToJson(j);
@@ -124,7 +162,7 @@ namespace opentrackio
         parseTimingToJson(j);
         parseTrackerToJson(j);
         parseTransformsToJson(j);
-        
+
         m_json = j;
     }
 
@@ -134,7 +172,7 @@ namespace opentrackio
         {
             return;
         }
-        
+
         auto& cameraJson = baseJson["static"]["camera"];
         assignJson(cameraJson, "activeSensorPhysicalDimensions", camera->activeSensorPhysicalDimensions);
         assignJson(cameraJson, "activeSensorResolution", camera->activeSensorResolution);
@@ -174,7 +212,7 @@ namespace opentrackio
         baseJson["globalStage"]["lat0"] = globalStage->lat0;
         baseJson["globalStage"]["lon0"] = globalStage->lon0;
         baseJson["globalStage"]["h0"] = globalStage->h0;
-    }    
+    }
 
     void OpenTrackIOSample::parseLensToJson(nlohmann::json& baseJson)
     {
@@ -182,7 +220,7 @@ namespace opentrackio
         {
             return;
         }
-        
+
         // ------- Static Fields
         assignJson(baseJson["static"]["lens"], "firmwareVersion", lens->firmwareVersion);
         assignJson(baseJson["static"]["lens"], "make", lens->make);
@@ -194,7 +232,7 @@ namespace opentrackio
 
         // ------- Standard Fields
         assignJson(baseJson["lens"], "custom", lens->custom);
-        
+
         baseJson["lens"]["distortion"] = nlohmann::json::array();
         for (const auto& dist : lens->distortion.value())
         {
@@ -221,7 +259,7 @@ namespace opentrackio
         }
 
         assignJson(baseJson["lens"], "entrancePupilOffset", lens->entrancePupilOffset);
-        
+
         if (lens->exposureFalloff.has_value())
         {
             baseJson["lens"]["exposureFalloff"]["a1"] = lens->exposureFalloff->a1;
@@ -244,7 +282,7 @@ namespace opentrackio
             assignJson(baseJson["lens"]["rawEncoders"], "iris", lens->rawEncoders->iris);
             assignJson(baseJson["lens"]["rawEncoders"], "zoom", lens->rawEncoders->zoom);
         }
-        
+
         assignJson(baseJson["lens"], "tStop", lens->tStop);
     }
 
@@ -254,7 +292,7 @@ namespace opentrackio
         {
             return;
         }
-        
+
         baseJson["protocol"]["name"] = protocol->name;
         baseJson["protocol"]["version"] = protocol->version;
     }
@@ -297,7 +335,7 @@ namespace opentrackio
         }
 
         baseJson["sourceNumber"] = sourceNumber->value;
-    }    
+    }
 
     void OpenTrackIOSample::parseTimingToJson(nlohmann::json& baseJson)
     {
@@ -305,7 +343,7 @@ namespace opentrackio
         {
             return;
         }
-        
+
         assignJson(baseJson["timing"], "sampleRate", timing->sampleRate);
         if (timing->mode.has_value())
         {
@@ -346,7 +384,7 @@ namespace opentrackio
                 assignJson(baseJson["timing"]["synchronization"]["offsets"], "translation", offsets.translation);
                 assignJson(baseJson["timing"]["synchronization"]["offsets"], "rotation", offsets.rotation);
                 assignJson(baseJson["timing"]["synchronization"]["offsets"], "lensEncoders", offsets.lensEncoders);
-            }            
+            }
 
             assignJson(baseJson["timing"]["synchronization"], "present", timing->synchronization->present);
 
@@ -404,6 +442,7 @@ namespace opentrackio
             baseJson["timing"]["timecode"]["frameRate"]["num"] = timing->timecode->frameRate.numerator;
             baseJson["timing"]["timecode"]["frameRate"]["denom"] = timing->timecode->frameRate.denominator;
             assignJson(baseJson["timing"]["timecode"], "subFrame", timing->timecode->subFrame);
+            assignJson(baseJson["timing"]["timecode"], "dropFrame", timing->timecode->dropFrame);
         }
     }
 
@@ -425,8 +464,8 @@ namespace opentrackio
         assignJson(baseJson["tracker"], "recording", tracker->recording);
         assignJson(baseJson["tracker"], "slate", tracker->slate);
         assignJson(baseJson["tracker"], "status", tracker->status);
-    }    
-    
+    }
+
     void OpenTrackIOSample::parseTransformsToJson(nlohmann::json& baseJson)
     {
         if (!transforms.has_value())
@@ -445,9 +484,25 @@ namespace opentrackio
             {
                 tfJson["scale"] = {{"x", tf.scale->x}, {"y", tf.scale->y}, {"z", tf.scale->z}};
             }
-            
+
             baseJson["transforms"].push_back(tfJson);
         }
+    }
+
+    bool OpenTrackIOSample::isEmpty() const
+    {
+        return !(camera.has_value() ||
+                 duration.has_value() ||
+                 globalStage.has_value() ||
+                 lens.has_value() ||
+                 protocol.has_value() ||
+                 relatedSampleIds.has_value() ||
+                 sampleId.has_value() ||
+                 sourceId.has_value() ||
+                 sourceNumber.has_value() ||
+                 timing.has_value() ||
+                 tracker.has_value() ||
+                 transforms.has_value());
     }
 
     void OpenTrackIOSample::warnForRemainingFields(const nlohmann::json &json)
@@ -457,17 +512,17 @@ namespace opentrackio
             {
                 return;
             }
-            
+
             for (const auto& [key, val] : currentRoot.items())
             {
                 if (key != "static")
                 {
-                    m_warningMessages.push_back(std::format("Key: {} was still remaining after parsing.", key));    
+                    m_warningMessages.push_back(std::format("Key: {} was still remaining after parsing.", key));
                 }
                 iterateItemsAndWarn(val);
             }
         };
-        
+
         iterateItemsAndWarn(json);
     }
 } // namespace opentrackio
