@@ -484,7 +484,7 @@ namespace opentrackio::opentrackioproperties
             timing.mode = str == "external" ? Mode::EXTERNAL : Mode::INTERNAL;
             timingJson.erase("mode");
         }
-        else
+        else if (str.has_value())
         {
             errors.emplace_back("field: timing/mode has an invalid string value.");
             timing.mode = std::nullopt;
