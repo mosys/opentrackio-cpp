@@ -479,7 +479,7 @@ namespace opentrackio::opentrackioproperties
 
         std::optional<std::string> str;
         OpenTrackIOHelpers::assignField(timingJson, "mode", str, "string", errors);
-        if (str.has_value() && (str == "external" || "internal"))
+        if (str.has_value() && (str == "external" || str == "internal"))
         {
             timing.mode = str == "external" ? Mode::EXTERNAL : Mode::INTERNAL;
             timingJson.erase("mode");
