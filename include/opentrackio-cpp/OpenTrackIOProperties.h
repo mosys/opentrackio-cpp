@@ -315,8 +315,8 @@ namespace opentrackio::opentrackioproperties
     struct SourceNumber
     {
         /**
-        * Number that identifies the index of the stream from a source from which data is being transported.
-        * This is most important in the case where a source is producing multiple streams of samples. */
+	    * Number that identifies the index of the stream from a source from which data is being transported.
+	    * This is most important in the case where a source is producing multiple streams of samples. */
         uint32_t value;
 
         static std::optional<SourceNumber> parse(nlohmann::json& json, std::vector<std::string>& errors);

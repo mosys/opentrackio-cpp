@@ -11,8 +11,9 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "opentrackio-cpp/OpenTrackIOProperties.h"
 #include "opentrackio-cpp/OpenTrackIOHelper.h"
+#include "opentrackio-cpp/OpenTrackIOProperties.h"
+
 #include <regex>
 
 namespace opentrackio::opentrackioproperties
@@ -53,11 +54,11 @@ namespace opentrackio::opentrackioproperties
             cameraJson.erase("anamorphicSqueeze");
         }
 
-        OpenTrackIOHelpers::assignField(cameraJson, "firmwareVersion", cam.firmwareVersion, "string", errors);
-        OpenTrackIOHelpers::assignField(cameraJson, "label", cam.label, "string", errors);
-        OpenTrackIOHelpers::assignField(cameraJson, "make", cam.make, "string", errors);
-        OpenTrackIOHelpers::assignField(cameraJson, "model", cam.model, "string", errors);
-        OpenTrackIOHelpers::assignField(cameraJson, "serialNumber", cam.serialNumber, "string", errors);
+        OpenTrackIOHelpers::assignField(cameraJson, "firmwareVersion", cam.firmwareVersion,  errors);
+        OpenTrackIOHelpers::assignField(cameraJson, "label", cam.label,  errors);
+        OpenTrackIOHelpers::assignField(cameraJson, "make", cam.make,  errors);
+        OpenTrackIOHelpers::assignField(cameraJson, "model", cam.model,  errors);
+        OpenTrackIOHelpers::assignField(cameraJson, "serialNumber", cam.serialNumber,  errors);
 
         if (cameraJson.contains("captureFrameRate"))
         {
@@ -68,8 +69,8 @@ namespace opentrackio::opentrackioproperties
         const std::regex pattern{R"(^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$)"};
         OpenTrackIOHelpers::assignRegexField(cameraJson, "fdlLink", cam.fdlLink, pattern, errors);
 
-        OpenTrackIOHelpers::assignField(cameraJson, "isoSpeed", cam.isoSpeed, "uint32", errors);
-        OpenTrackIOHelpers::assignField(cameraJson, "shutterAngle", cam.shutterAngle, "double", errors);
+        OpenTrackIOHelpers::assignField(cameraJson, "isoSpeed", cam.isoSpeed,  errors);
+        OpenTrackIOHelpers::assignField(cameraJson, "shutterAngle", cam.shutterAngle,  errors);
 
         if (cam.shutterAngle.has_value() && cam.shutterAngle.value() > 360)
         {
@@ -98,8 +99,8 @@ namespace opentrackio::opentrackioproperties
         std::optional<uint32_t> numerator = std::nullopt;
         std::optional<uint32_t> denominator = std::nullopt;
 
-        OpenTrackIOHelpers::assignField(durationJson, "num", numerator, "uint64", errors);
-        OpenTrackIOHelpers::assignField(durationJson, "denom", denominator, "uint64", errors);
+        OpenTrackIOHelpers::assignField(durationJson, "num", numerator, errors);
+        OpenTrackIOHelpers::assignField(durationJson, "denom", denominator, errors);
 
         if (!numerator.has_value() || !denominator.has_value())
         {
@@ -172,14 +173,14 @@ namespace opentrackio::opentrackioproperties
         if (json.contains("static") && json["static"].contains("lens"))
         {
             auto& lensJson = json["static"]["lens"];
-            OpenTrackIOHelpers::assignField(lensJson, "firmwareVersion", lens.firmwareVersion, "string", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "make", lens.make, "string", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "model", lens.model, "string", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "nominalFocalLength", lens.nominalFocalLength, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "serialNumber", lens.serialNumber, "string", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "distortionOverscanMax", lens.distortionOverscanMax, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "undistortionOverscanMax", lens.undistortionOverscanMax, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "calibrationHistory", lens.calibrationHistory, "string", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "firmwareVersion", lens.firmwareVersion,  errors);
+            OpenTrackIOHelpers::assignField(lensJson, "make", lens.make,  errors);
+            OpenTrackIOHelpers::assignField(lensJson, "model", lens.model,  errors);
+            OpenTrackIOHelpers::assignField(lensJson, "nominalFocalLength", lens.nominalFocalLength,  errors);
+            OpenTrackIOHelpers::assignField(lensJson, "serialNumber", lens.serialNumber,  errors);
+            OpenTrackIOHelpers::assignField(lensJson, "distortionOverscanMax", lens.distortionOverscanMax,  errors);
+            OpenTrackIOHelpers::assignField(lensJson, "undistortionOverscanMax", lens.undistortionOverscanMax,  errors);
+            OpenTrackIOHelpers::assignStringArray(lensJson, "calibrationHistory", lens.calibrationHistory,  errors);
 
             OpenTrackIOHelpers::clearFieldIfEmpty(json["static"], "lens");
         }
@@ -204,10 +205,10 @@ namespace opentrackio::opentrackioproperties
                     std::optional<double> overscan = std::nullopt;
                     std::optional<std::string> model = std::nullopt;
 
-                    OpenTrackIOHelpers::assignField(dist, "radial", radial, "double", errors);
-                    OpenTrackIOHelpers::assignField(dist, "tangential", tangential, "double", errors);
-                    OpenTrackIOHelpers::assignField(dist, "model", model, "string", errors);
-                    OpenTrackIOHelpers::assignField(dist, "overscan", overscan, "double", errors);
+                    OpenTrackIOHelpers::assignFieldArray(dist, "radial", radial, errors);
+                    OpenTrackIOHelpers::assignFieldArray(dist, "tangential", tangential, errors);
+                    OpenTrackIOHelpers::assignField(dist, "model", model, errors);
+                    OpenTrackIOHelpers::assignField(dist, "overscan", overscan, errors);
 
                     if (radial.has_value())
                     {
@@ -227,8 +228,8 @@ namespace opentrackio::opentrackioproperties
                 std::optional<double> x = std::nullopt;
                 std::optional<double> y = std::nullopt;
 
-                OpenTrackIOHelpers::assignField(lensJson["distortionOffset"], "x", x, "double", errors);
-                OpenTrackIOHelpers::assignField(lensJson["distortionOffset"], "y", y, "double", errors);
+                OpenTrackIOHelpers::assignField(lensJson["distortionOffset"], "x", x,  errors);
+                OpenTrackIOHelpers::assignField(lensJson["distortionOffset"], "y", y,  errors);
 
                 if (x.has_value() && y.has_value())
                 {
@@ -237,8 +238,8 @@ namespace opentrackio::opentrackioproperties
                 lensJson.erase("distortionOffset");
             }
 
-            OpenTrackIOHelpers::assignField(lensJson, "encoders", lens.encoders, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "entrancePupilOffset", lens.entrancePupilOffset, "double", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "encoders", lens.encoders,  errors);
+            OpenTrackIOHelpers::assignField(lensJson, "entrancePupilOffset", lens.entrancePupilOffset,  errors);
 
             if (lensJson.contains("exposureFalloff"))
             {
@@ -246,9 +247,9 @@ namespace opentrackio::opentrackioproperties
                 std::optional<double> a2 = std::nullopt;
                 std::optional<double> a3 = std::nullopt;
 
-                OpenTrackIOHelpers::assignField(lensJson["exposureFalloff"], "a1", a1, "double", errors);
-                OpenTrackIOHelpers::assignField(lensJson["exposureFalloff"], "a2", a2, "double", errors);
-                OpenTrackIOHelpers::assignField(lensJson["exposureFalloff"], "a3", a3, "double", errors);
+                OpenTrackIOHelpers::assignField(lensJson["exposureFalloff"], "a1", a1, errors);
+                OpenTrackIOHelpers::assignField(lensJson["exposureFalloff"], "a2", a2, errors);
+                OpenTrackIOHelpers::assignField(lensJson["exposureFalloff"], "a3", a3, errors);
 
                 if (a1.has_value())
                 {
@@ -257,9 +258,9 @@ namespace opentrackio::opentrackioproperties
                 lensJson.erase("exposureFalloff");
             }
 
-            OpenTrackIOHelpers::assignField(lensJson, "fStop", lens.fStop, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "pinholeFocalLength", lens.pinholeFocalLength, "double", errors);
-            OpenTrackIOHelpers::assignField(lensJson, "focusDistance", lens.focusDistance, "double", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "fStop", lens.fStop, errors);
+            OpenTrackIOHelpers::assignField(lensJson, "pinholeFocalLength", lens.pinholeFocalLength, errors);
+            OpenTrackIOHelpers::assignField(lensJson, "focusDistance", lens.focusDistance,  errors);
 
             if (lensJson.contains("calibrationHistory") && lensJson["calibrationHistory"].is_array())
             {
@@ -272,8 +273,8 @@ namespace opentrackio::opentrackioproperties
                 std::optional<double> x = std::nullopt;
                 std::optional<double> y = std::nullopt;
 
-                OpenTrackIOHelpers::assignField(lensJson["projectionOffset"], "x", x, "double", errors);
-                OpenTrackIOHelpers::assignField(lensJson["projectionOffset"], "y", y, "double", errors);
+                OpenTrackIOHelpers::assignField(lensJson["projectionOffset"], "x", x, errors);
+                OpenTrackIOHelpers::assignField(lensJson["projectionOffset"], "y", y, errors);
 
                 if (x.has_value() && y.has_value())
                 {
@@ -285,13 +286,13 @@ namespace opentrackio::opentrackioproperties
             if (lensJson.contains("rawEncoders"))
             {
                 lens.rawEncoders = RawEncoders{};
-                OpenTrackIOHelpers::assignField(lensJson["rawEncoders"], "focus", lens.rawEncoders->focus, "unit32", errors);
-                OpenTrackIOHelpers::assignField(lensJson["rawEncoders"], "iris", lens.rawEncoders->iris, "uint32", errors);
-                OpenTrackIOHelpers::assignField(lensJson["rawEncoders"], "zoom", lens.rawEncoders->zoom, "uint32", errors);
+                OpenTrackIOHelpers::assignField(lensJson["rawEncoders"], "focus", lens.rawEncoders->focus,  errors);
+                OpenTrackIOHelpers::assignField(lensJson["rawEncoders"], "iris", lens.rawEncoders->iris,  errors);
+                OpenTrackIOHelpers::assignField(lensJson["rawEncoders"], "zoom", lens.rawEncoders->zoom,  errors);
                 lensJson.erase("rawEncoders");
             }
 
-            OpenTrackIOHelpers::assignField(lensJson, "tStop", lens.tStop, "double", errors);
+            OpenTrackIOHelpers::assignField(lensJson, "tStop", lens.tStop,  errors);
 
             OpenTrackIOHelpers::clearFieldIfEmpty(json, "lens");
         }
@@ -444,7 +445,7 @@ namespace opentrackio::opentrackioproperties
         }
 
         std::optional<uint32_t> val;
-        OpenTrackIOHelpers::assignField(json, "sourceNumber", val, "uint32", errors);
+        OpenTrackIOHelpers::assignField(json, "sourceNumber", val,  errors);
 
         if (!val.has_value())
         {
@@ -478,7 +479,7 @@ namespace opentrackio::opentrackioproperties
         }
 
         std::optional<std::string> str;
-        OpenTrackIOHelpers::assignField(timingJson, "mode", str, "string", errors);
+        OpenTrackIOHelpers::assignField(timingJson, "mode", str,  errors);
         if (str.has_value() && (str == "external" || str == "internal"))
         {
             timing.mode = str == "external" ? Mode::EXTERNAL : Mode::INTERNAL;
@@ -502,7 +503,7 @@ namespace opentrackio::opentrackioproperties
             timingJson.erase("sampleTimestamp");
         }
 
-        OpenTrackIOHelpers::assignField(timingJson, "sequenceNumber", timing.sequenceNumber, "uint16", errors);
+        OpenTrackIOHelpers::assignField(timingJson, "sequenceNumber", timing.sequenceNumber,  errors);
 
         if (timingJson.contains("synchronization"))
         {
@@ -603,9 +604,9 @@ namespace opentrackio::opentrackioproperties
         if (syncJson.contains("offsets"))
         {
             outSync.offsets = Synchronization::Offsets{};
-            OpenTrackIOHelpers::assignField(syncJson["offsets"], "translation", outSync.offsets->translation, "double", errors);
-            OpenTrackIOHelpers::assignField(syncJson["offsets"], "rotation", outSync.offsets->rotation, "double", errors);
-            OpenTrackIOHelpers::assignField(syncJson["offsets"], "lensEncoders", outSync.offsets->lensEncoders, "double", errors);
+            OpenTrackIOHelpers::assignField(syncJson["offsets"], "translation", outSync.offsets->translation,  errors);
+            OpenTrackIOHelpers::assignField(syncJson["offsets"], "rotation", outSync.offsets->rotation,  errors);
+            OpenTrackIOHelpers::assignField(syncJson["offsets"], "lensEncoders", outSync.offsets->lensEncoders,  errors);
 
             if (!outSync.offsets->translation.has_value() && !outSync.offsets->rotation.has_value() &&
                 !outSync.offsets->lensEncoders.has_value())
@@ -615,7 +616,7 @@ namespace opentrackio::opentrackioproperties
             syncJson.erase("offsets");
         }
 
-        OpenTrackIOHelpers::assignField(syncJson, "present", outSync.present, "bool", errors);
+        OpenTrackIOHelpers::assignField(syncJson, "present", outSync.present, errors);
 
         if (syncJson.contains("ptp"))
         {
@@ -636,7 +637,7 @@ namespace opentrackio::opentrackioproperties
         auto& ptpJson = json["ptp"];
 
         std::optional<std::string> profileStr;
-        OpenTrackIOHelpers::assignField(ptpJson, "profile", profileStr, "string", errors);
+        OpenTrackIOHelpers::assignField(ptpJson, "profile", profileStr,  errors);
         bool successfullyAssignedProfileField = false;
         if (profileStr.has_value())
         {
@@ -672,7 +673,7 @@ namespace opentrackio::opentrackioproperties
         ptpJson.erase("profile");
 
         std::optional<uint16_t> domain;
-        OpenTrackIOHelpers::assignField(ptpJson, "domain", domain, "uint16", errors);
+        OpenTrackIOHelpers::assignField(ptpJson, "domain", domain,  errors);
         if (!domain.has_value())
         {
             errors.emplace_back("field: timing/synchronization/ptp/domain is required, however it is missing.");
@@ -694,8 +695,8 @@ namespace opentrackio::opentrackioproperties
         std::optional<uint8_t> priority1;
         std::optional<uint8_t> priority2;
         constexpr auto leaderPrioritiesStr = "leaderPriorities";
-        OpenTrackIOHelpers::assignField(ptpJson[leaderPrioritiesStr], "priority1", priority1, "uint8", errors);
-        OpenTrackIOHelpers::assignField(ptpJson[leaderPrioritiesStr], "priority2", priority2, "uint8", errors);
+        OpenTrackIOHelpers::assignField(ptpJson[leaderPrioritiesStr], "priority1", priority1,  errors);
+        OpenTrackIOHelpers::assignField(ptpJson[leaderPrioritiesStr], "priority2", priority2,  errors);
 
         if (!priority1.has_value() || !priority2.has_value())
         {
@@ -710,7 +711,7 @@ namespace opentrackio::opentrackioproperties
         };
 
         std::optional<double> leaderAccuracy;
-        OpenTrackIOHelpers::assignField(ptpJson, "leaderAccuracy", leaderAccuracy, "double", errors);
+        OpenTrackIOHelpers::assignField(ptpJson, "leaderAccuracy", leaderAccuracy,  errors);
         if (!leaderAccuracy.has_value())
         {
             errors.emplace_back("field: timing/synchronization/ptp/leaderAccuracy is required, however it is missing.");
@@ -719,7 +720,7 @@ namespace opentrackio::opentrackioproperties
         outPtp.leaderAccuracy = leaderAccuracy.value();
 
         std::optional<double> meanPathDelay;
-        OpenTrackIOHelpers::assignField(ptpJson, "meanPathDelay", meanPathDelay, "double", errors);
+        OpenTrackIOHelpers::assignField(ptpJson, "meanPathDelay", meanPathDelay,  errors);
         if (!meanPathDelay.has_value())
         {
             errors.emplace_back("field: timing/synchronization/ptp/meanPathDelay is required, however it is missing.");
@@ -727,10 +728,10 @@ namespace opentrackio::opentrackioproperties
         }
         outPtp.meanPathDelay = meanPathDelay.value();
 
-        OpenTrackIOHelpers::assignField(ptpJson, "vlan", outPtp.vlan, "uint32", errors);
+        OpenTrackIOHelpers::assignField(ptpJson, "vlan", outPtp.vlan,  errors);
 
         std::optional<std::string> leaderTimeSourceStr;
-        OpenTrackIOHelpers::assignField(ptpJson, "leaderTimeSource", leaderTimeSourceStr, "string", errors);
+        OpenTrackIOHelpers::assignField(ptpJson, "leaderTimeSource", leaderTimeSourceStr,  errors);
         if (leaderTimeSourceStr.has_value())
         {
             if (leaderTimeSourceStr == "GNSS")
@@ -763,10 +764,10 @@ namespace opentrackio::opentrackioproperties
         if (json.contains("static") && json["static"].contains("tracker"))
         {
             auto& tkrJson = json["static"]["tracker"];
-            OpenTrackIOHelpers::assignField(tkrJson, "firmwareVersion", tkr.firmwareVersion, "string", errors);
-            OpenTrackIOHelpers::assignField(tkrJson, "make", tkr.make, "string", errors);
-            OpenTrackIOHelpers::assignField(tkrJson, "model", tkr.model, "string", errors);
-            OpenTrackIOHelpers::assignField(tkrJson, "serialNumber", tkr.serialNumber, "string", errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "firmwareVersion", tkr.firmwareVersion,  errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "make", tkr.make,  errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "model", tkr.model,  errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "serialNumber", tkr.serialNumber,  errors);
 
             OpenTrackIOHelpers::clearFieldIfEmpty(json["static"], "tracker");
         }
@@ -775,10 +776,10 @@ namespace opentrackio::opentrackioproperties
         if (json.contains("tracker"))
         {
             auto& tkrJson = json["tracker"];
-            OpenTrackIOHelpers::assignField(tkrJson, "notes", tkr.notes, "string", errors);
-            OpenTrackIOHelpers::assignField(tkrJson, "recording", tkr.recording, "boolean", errors);
-            OpenTrackIOHelpers::assignField(tkrJson, "slate", tkr.slate, "string", errors);
-            OpenTrackIOHelpers::assignField(tkrJson, "status", tkr.status, "string", errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "notes", tkr.notes,  errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "recording", tkr.recording,  errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "slate", tkr.slate,  errors);
+            OpenTrackIOHelpers::assignField(tkrJson, "status", tkr.status,  errors);
 
             OpenTrackIOHelpers::clearFieldIfEmpty(json, "tracker");
         }

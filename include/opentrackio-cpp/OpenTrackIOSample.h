@@ -38,10 +38,11 @@ namespace opentrackio
         bool initialise(const nlohmann::json& json);
         bool initialise(const std::string_view jsonString);
         bool initialise(std::span<const uint8_t> cbor);
-        const std::vector<std::string>& getErrors() { return m_errorMessages; };
-        const std::vector<std::string>& getWarnings() { return m_warningMessages; };
+
+        const std::vector<std::string>& getErrors() const { return m_errorMessages; };
+        const std::vector<std::string>& getWarnings() const { return m_warningMessages; };
         const nlohmann::json& getJson();
-        
+
     private:
         void generateJson();
         void parseCameraToJson(nlohmann::json& baseJson);
