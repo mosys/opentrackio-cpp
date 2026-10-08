@@ -34,6 +34,7 @@ class opentrackiocppRecipe(ConanFile):
         
     def requirements(self):
         self.requires("nlohmann_json/3.11.3", transitive_headers=True)
+        self.requires("fmt/[>=10 <13]", transitive_headers=True, transitive_libs=True)
     
     def layout(self):
         cmake_layout(self)

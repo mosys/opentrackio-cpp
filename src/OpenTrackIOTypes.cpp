@@ -26,13 +26,13 @@ namespace opentrackio::opentrackiotypes
         uint32_t denom;
         if (!rationalJson.contains("num") || !rationalJson.contains("denom"))
         {
-            errors.emplace_back(std::format("Key: {} is missing numerator or denominator field.", fieldStr));
+            errors.emplace_back(fmt::format("Key: {} is missing numerator or denominator field.", fieldStr));
             return std::nullopt;
         }
 
         if (!rationalJson.at("num").is_number_unsigned() || !rationalJson.at("denom").is_number_unsigned())
         {
-            errors.emplace_back(std::format("Key: {} numerator or denominator field isn't of type: unsigned integer", fieldStr));
+            errors.emplace_back(fmt::format("Key: {} numerator or denominator field isn't of type: unsigned integer", fieldStr));
             return std::nullopt;
         }
 
@@ -51,7 +51,7 @@ namespace opentrackio::opentrackiotypes
         Vector3 vec{};
         if (!vecJson.contains("x") || !vecJson.contains("y") || !vecJson.contains("z"))
         {
-            errors.emplace_back(std::format("Key: {} Vector3 is missing required fields", fieldStr));
+            errors.emplace_back(fmt::format("Key: {} Vector3 is missing required fields", fieldStr));
             return std::nullopt;
         }
 
@@ -59,7 +59,7 @@ namespace opentrackio::opentrackiotypes
             !vecJson.at("y").is_number() ||
             !vecJson.at("z").is_number())
         {
-            errors.emplace_back(std::format("Key: {} Vector3 fields aren't of type: double", fieldStr));
+            errors.emplace_back(fmt::format("Key: {} Vector3 fields aren't of type: double", fieldStr));
             return std::nullopt;
         }
 
@@ -79,7 +79,7 @@ namespace opentrackio::opentrackiotypes
         std::optional<Rotation> rot = Rotation{};
         if (!rotJson.contains("pan") || !rotJson.contains("tilt") || !rotJson.contains("roll"))
         {
-            errors.emplace_back(std::format("Key: {} Rotation is missing required fields", fieldStr));
+            errors.emplace_back(fmt::format("Key: {} Rotation is missing required fields", fieldStr));
             return std::nullopt;
         }
 
@@ -87,7 +87,7 @@ namespace opentrackio::opentrackiotypes
             !rotJson.at("tilt").is_number() ||
             !rotJson.at("roll").is_number())
         {
-            errors.emplace_back(std::format("Key: {} Rotation fields aren't of type: double", fieldStr));
+            errors.emplace_back(fmt::format("Key: {} Rotation fields aren't of type: double", fieldStr));
             return std::nullopt;
         }
 
@@ -175,7 +175,7 @@ namespace opentrackio::opentrackiotypes
 
         if (!width.has_value() || !height.has_value())
         {
-            errors.emplace_back(std::format("Key: {} dimensions is missing required fields", fieldStr));
+            errors.emplace_back(fmt::format("Key: {} dimensions is missing required fields", fieldStr));
             return std::nullopt;
         }
 
@@ -197,7 +197,7 @@ namespace opentrackio::opentrackiotypes
 
         if (!width.has_value() || !height.has_value())
         {
-            errors.emplace_back(std::format("Key: {} dimensions is missing required fields", fieldStr));
+            errors.emplace_back(fmt::format("Key: {} dimensions is missing required fields", fieldStr));
             return std::nullopt;
         }
 

@@ -31,6 +31,7 @@ can then be used with CMake's `find_package` by setting `CMAKE_PREFIX_PATH`.
 
  - A C++20 compiler (Project has been tested with `MSVC` on Windows and `G++` on Linux).
  - Cmake `>=3.20`
+ - [fmt](https://github.com/fmtlib/fmt), available through CMake's `find_package(fmt CONFIG)` or Conan.
 
 #### Note:
 

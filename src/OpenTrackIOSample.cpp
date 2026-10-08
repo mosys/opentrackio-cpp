@@ -12,7 +12,7 @@
  */
 
 #include "opentrackio-cpp/OpenTrackIOSample.h"
-#include <format>
+#include <fmt/format.h>
 
 namespace opentrackio
 {
@@ -518,7 +518,7 @@ namespace opentrackio
             {
                 if (key != "static")
                 {
-                    m_warningMessages.push_back(std::format("Key: {} was still remaining after parsing.", key));
+                    m_warningMessages.push_back(fmt::format("Key: {} was still remaining after parsing.", key));
                 }
                 iterateItemsAndWarn(val);
             }

@@ -15,7 +15,7 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include <format>
+#include <fmt/format.h>
 #include <nlohmann/json.hpp>
 
 namespace opentrackio::opentrackiotypes
